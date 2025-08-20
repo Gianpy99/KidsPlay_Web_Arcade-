@@ -1,6 +1,6 @@
 # PRD — KidsPlay Web Arcade & Landing Pages (Markdown Export)
 **Data:** 20 Agosto 2025  
-**Autore:** [Tuo nome]
+**Autore:** [Gianpy99]
 
 ---
 
@@ -78,4 +78,15 @@ Fornire un set di giochi semplici, sicuri e divertenti che allenino lettura, scr
   index.html  (catalog)
   games.json
 ```
+
+## Supporto Gamepad/Joystick
+- L’app deve supportare controller esterni compatibili con lo standard HID (PlayStation DualShock/DualSense, Xbox Controller, Amazon Luna).
+- L’input dei gamepad viene gestito tramite plugin Flutter (`gamepads`) e mappato in azioni di gioco (muovi, seleziona, annulla).
+- Dev’essere presente un menu per la rimappatura dei comandi, in modo che genitori/tutori possano adattare i pulsanti alle preferenze del bambino.
+- Ogni minigioco deve poter essere controllato sia tramite touch che tramite gamepad, garantendo accessibilità universale.
+- Test richiesti su:
+  - Android (con controller Bluetooth e USB OTG)
+  - Desktop (Windows/macOS con controller USB/Bluetooth)
+
+
 ...
