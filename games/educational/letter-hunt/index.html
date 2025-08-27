@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caccia alle Lettere - KidsPlay</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            font-family: 'Comic Sans MS', cursive;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .game-header {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .game-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .controls-info {
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .target-letter {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 20px;
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        .game-scene {
+            width: 100%;
+            max-width: 800px;
+            height: 500px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 50%, #90EE90 100%);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        .scene-element {
+            position: absolute;
+            font-size: 2rem;
+            user-select: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .letter {
+            background: rgba(255,255,255,0.9);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2c3e50;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        
+        .letter.target-found {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            animation: bounce 0.6s ease;
+            z-index: 20;
+        }
+        
+        .letter.wrong-letter {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+            animation: shake 0.5s ease;
+        }
+        
+        .decoration {
+            z-index: 1;
+        }
+        
+        .tree {
+            font-size: 4rem;
+            bottom: 0px;
+        }
+        
+        .cloud {
+            font-size: 3rem;
+            color: white;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .flower {
+            font-size: 2rem;
+            bottom: 10px;
+        }
+        
+        .sun {
+            font-size: 3rem;
+            top: 20px;
+            right: 20px;
+            animation: rotate 20s linear infinite;
+        }
+        
+        .bird {
+            font-size: 2rem;
+            animation: fly 8s linear infinite;
+        }
+        
+        .game-info {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .info-item {
+            background: rgba(255,255,255,0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .back-button:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .level-complete {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        
+        .next-button, .restart-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0.5rem;
+            font-family: inherit;
+        }
+        
+        .hint-button {
+            background: #FF9800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            font-family: inherit;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+            40%, 43% { transform: translate3d(0,-15px,0); }
+            70% { transform: translate3d(0,-7px,0); }
+            90% { transform: translate3d(0,-3px,0); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes fly {
+            0% { left: -50px; }
+            100% { left: calc(100% + 50px); }
+        }
+        
+        @keyframes hint-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(255,215,0,0.5); }
+            50% { box-shadow: 0 0 20px rgba(255,215,0,0.8); }
+        }
+        
+        .letter.hint {
+            animation: hint-glow 1s ease infinite;
+        }
+        
+        @media (max-width: 768px) {
+            .game-scene {
+                height: 400px;
+            }
+            
+            .letter {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+            
+            .target-letter {
+                font-size: 2.5rem;
+                padding: 10px 20px;
+            }
+            
+            .game-info {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../../../index.html" class="back-button">
+        ← Torna ai Giochi
+    </a>
+    
+    <div class="game-header">
+        <h1>🔍 Caccia alle Lettere</h1>
+        <div class="controls-info">
+            <p><strong>Missione:</strong> Trova tutte le lettere nascoste nella scena!</p>
+            <p>Cerca la lettera evidenziata qui sotto:</p>
+        </div>
+    </div>
+    
+    <div class="target-letter" id="targetLetter">A</div>
+    
+    <div class="game-scene" id="gameScene">
+        <!-- Scene elements will be generated by JavaScript -->
+    </div>
+    
+    <button class="hint-button" onclick="showHint()" id="hintButton">💡 Aiuto</button>
+    
+    <div class="game-info">
+        <div class="info-item">
+            🎯 Livello: <span id="level">1</span>
+        </div>
+        <div class="info-item">
+            ✅ Trovate: <span id="found">0</span>/<span id="total">5</span>
+        </div>
+        <div class="info-item">
+            ⏰ Tempo: <span id="time">00:00</span>
+        </div>
+        <div class="info-item">
+            💡 Aiuti: <span id="hints">3</span>
+        </div>
+    </div>
+    
+    <div class="level-complete" id="levelCompleteDialog">
+        <h2>🎉 Livello Completato! 🎉</h2>
+        <p>Hai trovato tutte le lettere!</p>
+        <p>Tempo: <span id="completionTime">00:00</span></p>
+        <button class="next-button" onclick="nextLevel()">Livello Successivo! 🚀</button>
+        <button class="restart-button" onclick="restartGame()">Ricomincia 🔄</button>
+    </div>
+
+    <script>
+        class LetterHuntGame {
+            constructor() {
+                this.currentLevel = 1;
+                this.targetLetters = [];
+                this.foundLetters = 0;
+                this.totalLetters = 5;
+                this.hintsRemaining = 3;
+                this.startTime = Date.now();
+                this.gameActive = true;
+                this.difficulty = this.getDifficulty();
+                this.allLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                
+                this.scenes = {
+                    1: { theme: 'giardino', decorations: ['🌳', '🌸', '🦋', '🌞', '☁️'] },
+                    2: { theme: 'fattoria', decorations: ['🐄', '🐷', '🐔', '🌾', '🏠'] },
+                    3: { theme: 'mare', decorations: ['🐟', '🦀', '🐚', '⛵', '🏖️'] },
+                    4: { theme: 'foresta', decorations: ['🦉', '🦌', '🍄', '🌲', '🦊'] },
+                    5: { theme: 'spazio', decorations: ['🚀', '🌟', '🛸', '🌕', '👽'] }
+                };
+                
+                this.init();
+            }
+            
+            getDifficulty() {
+                const params = new URLSearchParams(window.location.search);
+                return params.get('difficulty') || 'easy';
+            }
+            
+            init() {
+                this.setupLevel();
+                this.startTimer();
+                this.setupControls();
+            }
+            
+            setupLevel() {
+                this.foundLetters = 0;
+                
+                // Adjust difficulty
+                switch(this.difficulty) {
+                    case 'easy':
+                        this.totalLetters = 4;
+                        this.hintsRemaining = 3;
+                        break;
+                    case 'normal':
+                        this.totalLetters = 6;
+                        this.hintsRemaining = 2;
+                        break;
+                    case 'hard':
+                        this.totalLetters = 8;
+                        this.hintsRemaining = 1;
+                        break;
+                }
+                
+                this.generateTargetLetters();
+                this.createScene();
+                this.updateUI();
+            }
+            
+            generateTargetLetters() {
+                this.targetLetters = [];
+                const availableLetters = this.allLetters.slice(0, Math.min(10 + this.currentLevel, 20));
+                
+                for (let i = 0; i < this.totalLetters; i++) {
+                    let letter;
+                    do {
+                        letter = availableLetters[Math.floor(Math.random() * availableLetters.length)];
+                    } while (this.targetLetters.includes(letter));
+                    
+                    this.targetLetters.push(letter);
+                }
+                
+                this.currentTargetIndex = 0;
+                this.updateTargetLetter();
+            }
+            
+            updateTargetLetter() {
+                const targetElement = document.getElementById('targetLetter');
+                if (this.currentTargetIndex < this.targetLetters.length) {
+                    targetElement.textContent = this.targetLetters[this.currentTargetIndex];
+                } else {
+                    targetElement.textContent = '🎉';
+                }
+            }
+            
+            createScene() {
+                const gameScene = document.getElementById('gameScene');
+                gameScene.innerHTML = '';
+                
+                const currentScene = this.scenes[Math.min(this.currentLevel, 5)];
+                
+                // Add decorations
+                currentScene.decorations.forEach((decoration, index) => {
+                    for (let i = 0; i < 2 + Math.random() * 3; i++) {
+                        const element = document.createElement('div');
+                        element.className = 'scene-element decoration';
+                        element.textContent = decoration;
+                        element.style.left = Math.random() * 85 + '%';
+                        element.style.top = Math.random() * 85 + '%';
+                        
+                        // Special positioning for certain decorations
+                        if (decoration === '🌞') {
+                            element.style.top = '10px';
+                            element.style.right = '20px';
+                            element.style.left = 'auto';
+                            element.className += ' sun';
+                        } else if (decoration === '☁️') {
+                            element.style.top = Math.random() * 30 + '%';
+                            element.className += ' cloud';
+                        } else if (decoration === '🌳' || decoration === '🌲') {
+                            element.style.bottom = '0px';
+                            element.style.top = 'auto';
+                            element.className += ' tree';
+                        } else if (decoration === '🌸' || decoration === '🍄') {
+                            element.style.bottom = '10px';
+                            element.style.top = 'auto';
+                            element.className += ' flower';
+                        } else if (decoration === '🦋' || decoration === '🐔') {
+                            element.className += ' bird';
+                            element.style.animationDelay = Math.random() * 5 + 's';
+                        }
+                        
+                        gameScene.appendChild(element);
+                    }
+                });
+                
+                // Add target letters
+                this.targetLetters.forEach((letter, index) => {
+                    const letterElement = document.createElement('div');
+                    letterElement.className = 'scene-element letter';
+                    letterElement.textContent = letter;
+                    letterElement.dataset.letter = letter;
+                    letterElement.dataset.index = index;
+                    
+                    // Position letters avoiding decorations
+                    let attempts = 0;
+                    let positioned = false;
+                    
+                    while (!positioned && attempts < 20) {
+                        const left = 10 + Math.random() * 75;
+                        const top = 10 + Math.random() * 75;
+                        
+                        letterElement.style.left = left + '%';
+                        letterElement.style.top = top + '%';
+                        
+                        // Check if position overlaps with existing letters
+                        const existingLetters = gameScene.querySelectorAll('.letter');
+                        let overlaps = false;
+                        
+                        existingLetters.forEach(existing => {
+                            const existingRect = {
+                                left: parseFloat(existing.style.left),
+                                top: parseFloat(existing.style.top)
+                            };
+                            
+                            if (Math.abs(left - existingRect.left) < 15 && 
+                                Math.abs(top - existingRect.top) < 15) {
+                                overlaps = true;
+                            }
+                        });
+                        
+                        if (!overlaps) {
+                            positioned = true;
+                        }
+                        attempts++;
+                    }
+                    
+                    letterElement.addEventListener('click', () => this.checkLetter(letterElement));
+                    gameScene.appendChild(letterElement);
+                });
+                
+                // Add some random distracting letters
+                const distractorCount = Math.min(this.difficulty === 'hard' ? 8 : 5, 6);
+                for (let i = 0; i < distractorCount; i++) {
+                    const letterElement = document.createElement('div');
+                    letterElement.className = 'scene-element letter';
+                    
+                    // Random letter not in target letters
+                    let randomLetter;
+                    do {
+                        randomLetter = this.allLetters[Math.floor(Math.random() * this.allLetters.length)];
+                    } while (this.targetLetters.includes(randomLetter));
+                    
+                    letterElement.textContent = randomLetter;
+                    letterElement.dataset.letter = randomLetter;
+                    letterElement.dataset.distractor = 'true';
+                    
+                    letterElement.style.left = 10 + Math.random() * 75 + '%';
+                    letterElement.style.top = 10 + Math.random() * 75 + '%';
+                    
+                    letterElement.addEventListener('click', () => this.checkLetter(letterElement));
+                    gameScene.appendChild(letterElement);
+                }
+            }
+            
+            checkLetter(letterElement) {
+                if (!this.gameActive) return;
+                
+                const clickedLetter = letterElement.dataset.letter;
+                const currentTarget = this.targetLetters[this.currentTargetIndex];
+                
+                if (clickedLetter === currentTarget) {
+                    // Correct letter found!
+                    letterElement.classList.add('target-found');
+                    this.foundLetters++;
+                    this.currentTargetIndex++;
+                    
+                    this.playSound('success');
+                    this.updateTargetLetter();
+                    this.updateUI();
+                    
+                    // Check if level complete
+                    if (this.foundLetters >= this.totalLetters) {
+                        setTimeout(() => this.levelComplete(), 500);
+                    }
+                } else {
+                    // Wrong letter
+                    letterElement.classList.add('wrong-letter');
+                    this.playSound('error');
+                    
+                    setTimeout(() => {
+                        letterElement.classList.remove('wrong-letter');
+                    }, 500);
+                }
+            }
+            
+            showHint() {
+                if (this.hintsRemaining <= 0) return;
+                
+                const currentTarget = this.targetLetters[this.currentTargetIndex];
+                const targetElement = document.querySelector(`.letter[data-letter="${currentTarget}"]:not(.target-found)`);
+                
+                if (targetElement) {
+                    targetElement.classList.add('hint');
+                    this.hintsRemaining--;
+                    this.updateUI();
+                    
+                    setTimeout(() => {
+                        targetElement.classList.remove('hint');
+                    }, 3000);
+                    
+                    this.playSound('hint');
+                }
+                
+                if (this.hintsRemaining <= 0) {
+                    document.getElementById('hintButton').disabled = true;
+                    document.getElementById('hintButton').style.opacity = '0.5';
+                }
+            }
+            
+            levelComplete() {
+                this.gameActive = false;
+                const completionTime = this.formatTime(Math.floor((Date.now() - this.startTime) / 1000));
+                document.getElementById('completionTime').textContent = completionTime;
+                document.getElementById('levelCompleteDialog').style.display = 'block';
+                this.playSound('victory');
+            }
+            
+            nextLevel() {
+                this.currentLevel++;
+                this.gameActive = true;
+                this.startTime = Date.now();
+                document.getElementById('levelCompleteDialog').style.display = 'none';
+                this.setupLevel();
+            }
+            
+            updateUI() {
+                document.getElementById('level').textContent = this.currentLevel;
+                document.getElementById('found').textContent = this.foundLetters;
+                document.getElementById('total').textContent = this.totalLetters;
+                document.getElementById('hints').textContent = this.hintsRemaining;
+            }
+            
+            startTimer() {
+                setInterval(() => {
+                    if (this.gameActive) {
+                        const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+                        document.getElementById('time').textContent = this.formatTime(elapsed);
+                    }
+                }, 1000);
+            }
+            
+            formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }
+            
+            setupControls() {
+                // Keyboard support for accessibility
+                document.addEventListener('keydown', (e) => {
+                    if (!this.gameActive) return;
+                    
+                    switch(e.code) {
+                        case 'KeyH':
+                            this.showHint();
+                            break;
+                        case 'Space':
+                            e.preventDefault();
+                            // Could implement letter selection with keyboard
+                            break;
+                    }
+                });
+                
+                // Touch support is inherent through click events
+            }
+            
+            playSound(type) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    switch(type) {
+                        case 'success':
+                            this.playTone(audioContext, 523, 0.3); // C5
+                            setTimeout(() => this.playTone(audioContext, 659, 0.3), 100); // E5
+                            break;
+                        case 'error':
+                            this.playTone(audioContext, 200, 0.4);
+                            break;
+                        case 'hint':
+                            this.playTone(audioContext, 400, 0.2);
+                            setTimeout(() => this.playTone(audioContext, 500, 0.2), 150);
+                            break;
+                        case 'victory':
+                            const notes = [523, 659, 784, 1047];
+                            notes.forEach((note, i) => {
+                                setTimeout(() => this.playTone(audioContext, note, 0.4), i * 200);
+                            });
+                            break;
+                    }
+                } catch (e) {
+                    // Ignore audio errors
+                }
+            }
+            
+            playTone(audioContext, frequency, duration) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            }
+        }
+        
+        // Initialize game
+        let game = new LetterHuntGame();
+        
+        function showHint() {
+            game.showHint();
+        }
+        
+        function nextLevel() {
+            game.nextLevel();
+        }
+        
+        function restartGame() {
+            document.getElementById('levelCompleteDialog').style.display = 'none';
+            game = new LetterHuntGame();
+        }
+    </script>
+</body>
+</html>

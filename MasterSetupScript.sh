@@ -2123,3 +2123,829 @@ cat > games/adventure/speedy-adventures/index.html << 'HTML'
                 // Draw gems
                 this.gems.forEach(gem => {
                     if (!gem.collected) {
+                        this.ctx.fillStyle = gem.color;
+                        this.ctx.fillRect(gem.x, gem.y, gem.width, gem.height);
+                        this.ctx.font = '16px Arial';
+                        this.ctx.fillText(gem.emoji, gem.x + 2, gem.y + 16);
+                    }
+                });
+                
+                // Draw score
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = '20px Arial';
+                this.ctx.fillText(`Score: ${this.score}`, 10, 30);
+                this.ctx.fillText(`Lives: ${this.lives}`, 10, 60);
+                
+                // Draw victory message
+                if (this.victory) {
+                    this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.ctx.fillStyle = 'gold';
+                    this.ctx.font = '48px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('🎉 Vittoria! 🎉', this.canvas.width/2, this.canvas.height/2);
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.font = '24px Arial';
+                    this.ctx.fillText('Premi SPAZIO per giocare ancora', this.canvas.width/2, this.canvas.height/2 + 50);
+                    this.ctx.textAlign = 'left';
+                }
+            }
+            
+            handleInput() {
+                // Handle gamepad input
+                const gamepads = navigator.getGamepads();
+                if (gamepads[0]) {
+                    const gp = gamepads[0];
+                    if (gp.buttons[0].pressed) this.jump(); // A button
+                    if (gp.axes[0] < -0.5) this.moveLeft(); // Left stick left
+                    if (gp.axes[0] > 0.5) this.moveRight(); // Left stick right
+                }
+            }
+            
+            jump() {
+                if (this.player.grounded) {
+                    this.player.velocityY = -12;
+                    this.player.grounded = false;
+                }
+            }
+            
+            moveLeft() {
+                this.player.velocityX = Math.max(this.player.velocityX - 1, -8);
+            }
+            
+            moveRight() {
+                this.player.velocityX = Math.min(this.player.velocityX + 1, 8);
+            }
+            
+            checkCollisions() {
+                // Gem collection
+                this.gems.forEach(gem => {
+                    if (!gem.collected && 
+                        this.player.x < gem.x + gem.width &&
+                        this.player.x + this.player.width > gem.x &&
+                        this.player.y < gem.y + gem.height &&
+                        this.player.y + this.player.height > gem.y) {
+                        gem.collected = true;
+                        this.score += 10;
+                        this.playSound('collect');
+                    }
+                });
+                
+                // Check victory
+                if (this.gems.every(gem => gem.collected)) {
+                    this.victory = true;
+                    this.playSound('victory');
+                }
+            }
+            
+            playSound(type) {
+                // Simple audio feedback
+                const audio = new Audio();
+                switch(type) {
+                    case 'collect':
+                        audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcdBTmP1PCLeisFJHPJ8OKbSAgSW63k66NKEwyA0fX...';
+                        break;
+                    case 'victory':
+                        // Victory fanfare
+                        const notes = [262, 294, 330, 349, 392, 440, 494, 523];
+                        notes.forEach((note, i) => {
+                            setTimeout(() => this.playTone(note, 200), i * 100);
+                        });
+                        break;
+                }
+                audio.play().catch(() => {}); // Ignore audio errors
+            }
+            
+            playTone(frequency, duration) {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration / 1000);
+            }
+        }
+        
+        // Initialize game
+        const game = new AdventureGame();
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (game.victory && e.code === 'Space') {
+                location.reload();
+                return;
+            }
+            
+            switch(e.code) {
+                case 'ArrowLeft':
+                case 'KeyA':
+                    game.moveLeft();
+                    break;
+                case 'ArrowRight':
+                case 'KeyD':
+                    game.moveRight();
+                    break;
+                case 'Space':
+                case 'ArrowUp':
+                case 'KeyW':
+                    e.preventDefault();
+                    game.jump();
+                    break;
+            }
+        });
+        
+        // Gamepad support
+        window.addEventListener('gamepadconnected', (e) => {
+            console.log('Gamepad connected:', e.gamepad.id);
+        });
+        
+        // Touch controls for mobile
+        let touchStartY = 0;
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            touchStartY = e.touches[0].clientY;
+        });
+        
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            const touchEndY = e.changedTouches[0].clientY;
+            const deltaY = touchStartY - touchEndY;
+            
+            if (deltaY > 30) { // Swipe up
+                game.jump();
+            }
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            
+            if (x < canvas.width / 2) {
+                game.moveLeft();
+            } else {
+                game.moveRight();
+            }
+        });
+        
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+EOF
+
+echo "✅ Adventure games setup completed!"
+echo "   - Adventure games structure created"
+echo "   - Sample adventure game implemented"
+echo "   - Touch and gamepad controls added"
+EOF
+}
+
+create_config_setup_module() {
+    local file_path="$1"
+    
+    cat > "$file_path" << 'EOF'
+#!/bin/bash
+# Configuration Setup Module - KidsPlay
+set -e
+
+echo "⚙️ Setting up configuration files..."
+
+# Create configuration directory
+mkdir -p config
+
+# Create profile configurations
+cat > config/figlio1.json << 'JSON'
+{
+    "profile_name": "figlio1",
+    "display_name": "Primo Figlio",
+    "age": 5,
+    "difficulty_level": "easy",
+    "speed_multiplier": 0.8,
+    "audio_enabled": true,
+    "language": "it",
+    "enabled_games": [
+        "memory-letters",
+        "letter-hunt", 
+        "math-easy",
+        "snake",
+        "blockworld"
+    ],
+    "gamepad_enabled": true,
+    "parental_controls": {
+        "max_session_time": 30,
+        "break_reminders": true,
+        "volume_limit": 0.7
+    },
+    "ui_preferences": {
+        "large_buttons": true,
+        "high_contrast": false,
+        "animations": true
+    }
+}
+JSON
+
+cat > config/figlio2.json << 'JSON'
+{
+    "profile_name": "figlio2", 
+    "display_name": "Secondo Figlio",
+    "age": 6,
+    "difficulty_level": "normal",
+    "speed_multiplier": 1.0,
+    "audio_enabled": true,
+    "language": "it",
+    "enabled_games": [
+        "memory-letters",
+        "letter-hunt",
+        "math-easy", 
+        "number-block",
+        "push-block",
+        "snake",
+        "speedy-adventures",
+        "dino-explorer"
+    ],
+    "gamepad_enabled": true,
+    "parental_controls": {
+        "max_session_time": 45,
+        "break_reminders": true,
+        "volume_limit": 0.8
+    },
+    "ui_preferences": {
+        "large_buttons": false,
+        "high_contrast": false,
+        "animations": true
+    }
+}
+JSON
+
+# Create default configuration
+cat > config/default.json << 'JSON'
+{
+    "profile_name": "default",
+    "display_name": "Guest",
+    "age": 5,
+    "difficulty_level": "easy",
+    "speed_multiplier": 0.8,
+    "audio_enabled": true,
+    "language": "it",
+    "enabled_games": [
+        "memory-letters",
+        "snake",
+        "math-easy"
+    ],
+    "gamepad_enabled": true,
+    "parental_controls": {
+        "max_session_time": 20,
+        "break_reminders": true,
+        "volume_limit": 0.6
+    },
+    "ui_preferences": {
+        "large_buttons": true,
+        "high_contrast": false,
+        "animations": true
+    }
+}
+JSON
+
+# Create difficulty configuration
+cat > config/difficulty.json << 'JSON'
+{
+    "version": "2.0",
+    "educational": {
+        "very_easy": {
+            "speed": 0.5,
+            "hints": true,
+            "auto_complete": true,
+            "time_limit": 0,
+            "mistakes_allowed": 999
+        },
+        "easy": {
+            "speed": 0.75,
+            "hints": true,
+            "auto_complete": false,
+            "time_limit": 120,
+            "mistakes_allowed": 5
+        },
+        "normal": {
+            "speed": 1.0,
+            "hints": false,
+            "auto_complete": false,
+            "time_limit": 60,
+            "mistakes_allowed": 3
+        }
+    },
+    "adventure": {
+        "very_easy": {
+            "speed": 0.6,
+            "combat": false,
+            "auto_movement": true,
+            "lives": 999,
+            "checkpoints": true
+        },
+        "easy": {
+            "speed": 0.8,
+            "combat": "simple",
+            "auto_movement": false,
+            "lives": 5,
+            "checkpoints": true
+        },
+        "normal": {
+            "speed": 1.0,
+            "combat": "full",
+            "auto_movement": false,
+            "lives": 3,
+            "checkpoints": false
+        }
+    }
+}
+JSON
+
+# Create gamepad mappings
+cat > config/gamepad-mappings.json << 'JSON'
+{
+    "version": "1.0",
+    "universal_mapping": {
+        "move": ["dpad", "left_stick"],
+        "primary_action": ["button_0", "button_2"],
+        "secondary_action": ["button_1", "button_3"],
+        "menu": ["button_9", "button_8"],
+        "pause": ["button_9"],
+        "back_to_catalog": ["button_8", "button_6"]
+    },
+    "game_specific": {
+        "snake": {
+            "up": ["dpad_up", "button_3"],
+            "down": ["dpad_down", "button_0"],
+            "left": ["dpad_left", "button_2"],
+            "right": ["dpad_right", "button_1"],
+            "pause": ["button_9"]
+        },
+        "blockworld": {
+            "move": ["dpad", "left_stick"],
+            "place_block": ["button_0"],
+            "remove_block": ["button_1"],
+            "change_block": ["button_3"],
+            "menu": ["button_9"]
+        },
+        "speedy_adventures": {
+            "jump": ["button_0", "button_2"],
+            "speed_boost": ["button_7"],
+            "power_up": ["button_3"],
+            "pause": ["button_9"]
+        }
+    }
+}
+JSON
+
+echo "✅ Configuration setup completed!"
+echo "   - Profile configurations created (figlio1, figlio2, default)"
+echo "   - Difficulty levels configured"
+echo "   - Gamepad mappings defined"
+echo "   - Parental controls included"
+EOF
+}
+
+create_assets_setup_module() {
+    local file_path="$1"
+    
+    cat > "$file_path" << 'EOF'
+#!/bin/bash
+# Assets Setup Module - KidsPlay
+set -e
+
+echo "🎨 Setting up assets and media..."
+
+# Create assets directory structure
+mkdir -p assets/{sounds,images,fonts}
+
+# Create placeholder icons (using CSS-generated icons for now)
+cat > assets/images/placeholder-icons.css << 'CSS'
+/* Placeholder icons using CSS and emojis until real assets are added */
+.icon-snake::before { content: '🐍'; }
+.icon-memory::before { content: '🔤'; }
+.icon-math::before { content: '🔢'; }
+.icon-adventure::before { content: '🎮'; }
+.icon-blockworld::before { content: '🧱'; }
+.icon-dino::before { content: '🦕'; }
+.icon-speedy::before { content: '💨'; }
+
+.game-icon {
+    font-size: 4rem;
+    display: inline-block;
+    text-align: center;
+    width: 80px;
+    height: 80px;
+    line-height: 80px;
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+    border-radius: 20px;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+CSS
+
+# Create simple sound generation script
+cat > assets/sounds/generate-sounds.js << 'JS'
+// Sound generation utilities for KidsPlay
+class SoundGenerator {
+    constructor() {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    playSuccess() {
+        const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+        notes.forEach((freq, i) => {
+            setTimeout(() => this.playTone(freq, 150), i * 100);
+        });
+    }
+    
+    playError() {
+        this.playTone(200, 300); // Low tone
+    }
+    
+    playCollect() {
+        const notes = [523, 659, 784]; // C5, E5, G5
+        notes.forEach((freq, i) => {
+            setTimeout(() => this.playTone(freq, 100), i * 50);
+        });
+    }
+    
+    playTone(frequency, duration) {
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration / 1000);
+    }
+}
+
+// Export for use in games
+window.KidsPlaySounds = new SoundGenerator();
+JS
+
+# Create font loading CSS
+cat > assets/fonts/fonts.css << 'CSS'
+/* Kid-friendly fonts */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@400;600;700&display=swap');
+
+:root {
+    --font-title: 'Fredoka One', cursive;
+    --font-body: 'Nunito', sans-serif;
+    --font-game: 'Comic Sans MS', cursive, sans-serif;
+}
+
+.title-font {
+    font-family: var(--font-title);
+}
+
+.body-font {
+    font-family: var(--font-body);
+}
+
+.game-font {
+    font-family: var(--font-game);
+}
+CSS
+
+# Create audio manager
+cat > common/core/audio-manager.js << 'JS'
+/**
+ * KidsPlay Audio Manager
+ * Handles all audio functionality with parental controls
+ */
+
+class AudioManager {
+    constructor() {
+        this.enabled = true;
+        this.volume = 0.7;
+        this.sounds = new Map();
+        this.audioContext = null;
+        this.init();
+    }
+    
+    init() {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn('Web Audio API not supported');
+        }
+        
+        // Load settings from profile
+        const profile = window.kidsPlayEngine?.config;
+        if (profile) {
+            this.enabled = profile.audio_enabled;
+            this.volume = profile.parental_controls?.volume_limit || 0.7;
+        }
+    }
+    
+    playSound(type, options = {}) {
+        if (!this.enabled || !this.audioContext) return;
+        
+        switch(type) {
+            case 'success':
+                this.playSuccessSound();
+                break;
+            case 'error':
+                this.playErrorSound();
+                break;
+            case 'collect':
+                this.playCollectSound();
+                break;
+            case 'click':
+                this.playClickSound();
+                break;
+            case 'victory':
+                this.playVictorySound();
+                break;
+        }
+    }
+    
+    playTone(frequency, duration, type = 'sine') {
+        if (!this.enabled || !this.audioContext) return;
+        
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = type;
+        
+        gainNode.gain.setValueAtTime(this.volume * 0.3, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration / 1000);
+    }
+    
+    playSuccessSound() {
+        const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+        notes.forEach((freq, i) => {
+            setTimeout(() => this.playTone(freq, 150), i * 100);
+        });
+    }
+    
+    playErrorSound() {
+        this.playTone(200, 300);
+    }
+    
+    playCollectSound() {
+        const notes = [523, 659, 784];
+        notes.forEach((freq, i) => {
+            setTimeout(() => this.playTone(freq, 100), i * 50);
+        });
+    }
+    
+    playClickSound() {
+        this.playTone(800, 100);
+    }
+    
+    playVictorySound() {
+        const melody = [523, 587, 659, 698, 784, 880, 988, 1047];
+        melody.forEach((freq, i) => {
+            setTimeout(() => this.playTone(freq, 200), i * 150);
+        });
+    }
+    
+    setVolume(level) {
+        this.volume = Math.max(0, Math.min(1, level));
+    }
+    
+    toggleEnabled() {
+        this.enabled = !this.enabled;
+        return this.enabled;
+    }
+}
+JS
+
+echo "✅ Assets setup completed!"
+echo "   - Asset directory structure created"
+echo "   - CSS icon placeholders generated"
+echo "   - Audio manager implemented"
+echo "   - Font loading configured"
+echo "   - Sound generation utilities created"
+EOF
+}
+
+create_deployment_setup_module() {
+    local file_path="$1"
+    
+    cat > "$file_path" << 'EOF'
+#!/bin/bash
+# Deployment Setup Module - KidsPlay
+set -e
+
+echo "🚀 Setting up deployment configuration..."
+
+# Create service worker for PWA
+cat > sw.js << 'JS'
+const CACHE_NAME = 'kidsplay-v2.0';
+const urlsToCache = [
+    '/',
+    '/index.html',
+    '/common/core/game-engine.js',
+    '/common/core/input-manager.js',
+    '/common/core/audio-manager.js',
+    '/common/styles/base.css',
+    '/common/styles/mobile.css',
+    '/games.json',
+    '/manifest.json'
+];
+
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then((cache) => cache.addAll(urlsToCache))
+    );
+});
+
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request)
+            .then((response) => {
+                if (response) {
+                    return response;
+                }
+                return fetch(event.request);
+            })
+    );
+});
+JS
+
+# Update main index.html to register service worker
+cat >> index.html << 'HTML'
+
+<script>
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+                console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+                console.log('SW registration failed: ', registrationError);
+            });
+    });
+}
+</script>
+HTML
+
+# Create build script  
+cat > build.sh << 'BASH'
+#!/bin/bash
+echo "🔨 Building KidsPlay for production..."
+
+# Minify CSS (basic concatenation for now)
+cat common/styles/*.css > dist/kidsplay.min.css
+
+# Combine core JS files
+cat common/core/*.js > dist/kidsplay.min.js
+
+# Copy games
+cp -r games dist/
+
+# Copy assets
+cp -r assets dist/
+
+# Copy config
+cp -r config dist/
+
+# Copy manifest and service worker
+cp manifest.json dist/
+cp sw.js dist/
+
+# Copy main index
+cp index.html dist/
+
+echo "✅ Build completed in dist/ directory"
+BASH
+
+chmod +x build.sh
+
+# Create basic nginx configuration
+cat > nginx.conf << 'NGINX'
+server {
+    listen 80;
+    server_name kidsplay.local figlio1.kidsplay.local figlio2.kidsplay.local;
+    root /var/www/kidsplay;
+    index index.html;
+    
+    # PWA support
+    location /manifest.json {
+        add_header Content-Type application/manifest+json;
+        add_header Cache-Control "public, max-age=604800";
+    }
+    
+    location /sw.js {
+        add_header Content-Type application/javascript;
+        add_header Cache-Control "public, max-age=0";
+    }
+    
+    # Game files
+    location /games/ {
+        add_header Cache-Control "public, max-age=3600";
+        try_files $uri $uri/ =404;
+    }
+    
+    # Assets
+    location /assets/ {
+        add_header Cache-Control "public, max-age=86400";
+        try_files $uri $uri/ =404;
+    }
+    
+    # API endpoints (future)
+    location /api/ {
+        add_header Content-Type application/json;
+        add_header Access-Control-Allow-Origin *;
+    }
+    
+    # Default fallback
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+NGINX
+
+# Create docker configuration
+cat > Dockerfile << 'DOCKER'
+FROM nginx:alpine
+
+# Copy application files
+COPY . /var/www/kidsplay
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]
+DOCKER
+
+cat > docker-compose.yml << 'COMPOSE'
+version: '3.8'
+
+services:
+  kidsplay:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - ./config:/var/www/kidsplay/config
+      - ./games:/var/www/kidsplay/games
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    
+  # Future: Add Redis for session storage
+  # redis:
+  #   image: redis:alpine
+  #   restart: unless-stopped
+COMPOSE
+
+echo "✅ Deployment setup completed!"
+echo "   - PWA service worker created"
+echo "   - Build script generated"
+echo "   - Nginx configuration ready"
+echo "   - Docker configuration prepared"
+echo "   - Production optimization files created"
+
+echo ""
+echo "🎯 Next steps for deployment:"
+echo "   1. Run ./build.sh to create production build"
+echo "   2. Use docker-compose up to start containers"
+echo "   3. Configure DNS for subdomains (figlio1, figlio2)"
+echo "   4. Set up SSL certificates for production"
+EOF
+}
+
+# Call main setup function to start the installation
+echo ""
+print_section "Starting KidsPlay Setup"
+echo "🎮 Welcome to the KidsPlay Modular Setup System!"
+echo ""
+
+main_setup

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>KidsPlay - Giochi Educativi</title>
+    <link rel="stylesheet" href="common/styles/base.css?v=20250827b">
+    <link rel="stylesheet" href="common/styles/mobile.css?v=20250827b">
+    <link rel="manifest" href="manifest.json?v=20250827b">
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <h1>🎮 KidsPlay</h1>
+            <div class="user-section">
+                <div class="user-info" style="display: none;">
+                    👤 <span class="current-username">Ospite</span>
+                    <button id="logoutBtn" onclick="typeof logoutUser === 'function' ? logoutUser() : void(0)" style="display: none;">🚪 Logout</button>
+                </div>
+                <button id="loginBtn" onclick="typeof loginUser === 'function' ? loginUser() : void(0)">🔑 Login</button>
+            </div>
+            <!-- Profile indicator rimosso - ora gestito dall'UserManager -->
+        </header>
+        
+        <main id="game-catalog" class="catalog-grid">
+            <!-- Games will be loaded dynamically -->
+        </main>
+        
+        <!-- Gamepad indicator rimosso perché troppo invasivo -->
+    </div>
+    
+    <script src="js/user-manager.js?v=20250827b"></script>
+    <script src="common/core/game-engine.js?v=20250827b"></script>
+    <script src="common/core/input-manager.js?v=20250827b"></script>
+    <script src="common/core/audio-manager.js?v=20250827b"></script>
+    
+    <script>
+        // Enhanced gamepad management with Chrome compatibility
+        let mainPageGamepad = {
+            connected: false,
+            index: -1,
+            selectedGameIndex: 0,
+            lastInputTime: 0,
+            inputDelay: 200, // ms between inputs
+            userInteracted: false // Chrome requires user interaction first
+        };
+        
+        let gameCards = [];
+        
+        // Enable gamepad access on user interaction (Chrome requirement)
+        function enableGamepadAccess() {
+            if (!mainPageGamepad.userInteracted) {
+                mainPageGamepad.userInteracted = true;
+                console.log('🎮 User interaction detected - gamepad access enabled');
+                checkGamepadSilently();
+            }
+        }
+        
+        // Add event listeners for user interaction
+        document.addEventListener('click', enableGamepadAccess, { once: false });
+        document.addEventListener('keydown', enableGamepadAccess, { once: false });
+        document.addEventListener('touchstart', enableGamepadAccess, { once: false });
+        
+        // Show notification for Chrome users
+        function showGamepadInstructions() {
+            if (navigator.userAgent.includes('Chrome') && !mainPageGamepad.userInteracted) {
+                const instruction = document.createElement('div');
+                instruction.id = 'gamepad-instruction';
+                instruction.style.cssText = `
+                    position: fixed;
+                    top: 10px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(76, 175, 80, 0.9);
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 20px;
+                    font-size: 14px;
+                    z-index: 1000;
+                    text-align: center;
+                `;
+                instruction.innerHTML = '🎮 Clicca ovunque per abilitare il gamepad';
+                document.body.appendChild(instruction);
+                
+                // Remove after first interaction
+                document.addEventListener('click', () => {
+                    if (instruction.parentNode) {
+                        instruction.remove();
+                    }
+                }, { once: true });
+            }
+        }
+        
+        // Silent gamepad detection with Chrome compatibility
+        function checkGamepadSilently() {
+            // Chrome requires user interaction before gamepad access
+            if (!mainPageGamepad.userInteracted && navigator.userAgent.includes('Chrome')) {
+                return;
+            }
+            
+            const gamepads = navigator.getGamepads();
+            let found = false;
+            
+            for (let i = 0; i < gamepads.length; i++) {
+                if (gamepads[i] && gamepads[i].connected) {
+                    found = true;
+                    mainPageGamepad.connected = true;
+                    mainPageGamepad.index = i;
+                    break;
+                }
+            }
+            
+            if (!found) {
+                mainPageGamepad.connected = false;
+                mainPageGamepad.index = -1;
+            }
+        }
+        
+        // Gamepad navigation for main menu with Chrome compatibility
+        function handleGamepadNavigation() {
+            // Chrome compatibility check
+            if (!mainPageGamepad.userInteracted && navigator.userAgent.includes('Chrome')) {
+                return;
+            }
+            
+            if (!mainPageGamepad.connected) return;
+            
+            const gamepad = navigator.getGamepads()[mainPageGamepad.index];
+            if (!gamepad) return;
+            
+            const now = Date.now();
+            if (now - mainPageGamepad.lastInputTime < mainPageGamepad.inputDelay) return;
+            
+            // Update game cards list
+            gameCards = Array.from(document.querySelectorAll('.game-card'));
+            if (gameCards.length === 0) return;
+            
+            // D-pad navigation
+            let moved = false;
+            
+            // D-pad left or left analog stick
+            if (gamepad.buttons[14]?.pressed || gamepad.axes[0] < -0.5) {
+                console.log('🎮 Left input detected');
+                mainPageGamepad.selectedGameIndex = Math.max(0, mainPageGamepad.selectedGameIndex - 1);
+                moved = true;
+            }
+            // D-pad right or right analog stick
+            else if (gamepad.buttons[15]?.pressed || gamepad.axes[0] > 0.5) {
+                console.log('🎮 Right input detected');
+                mainPageGamepad.selectedGameIndex = Math.min(gameCards.length - 1, mainPageGamepad.selectedGameIndex + 1);
+                moved = true;
+            }
+            // D-pad up
+            else if (gamepad.buttons[12]?.pressed || gamepad.axes[1] < -0.5) {
+                console.log('🎮 Up input detected');
+                // Move up by row (assuming 3-4 games per row)
+                const gamesPerRow = Math.ceil(Math.sqrt(gameCards.length));
+                mainPageGamepad.selectedGameIndex = Math.max(0, mainPageGamepad.selectedGameIndex - gamesPerRow);
+                moved = true;
+            }
+            // D-pad down
+            else if (gamepad.buttons[13]?.pressed || gamepad.axes[1] > 0.5) {
+                console.log('🎮 Down input detected');
+                // Move down by row
+                const gamesPerRow = Math.ceil(Math.sqrt(gameCards.length));
+                mainPageGamepad.selectedGameIndex = Math.min(gameCards.length - 1, mainPageGamepad.selectedGameIndex + gamesPerRow);
+                moved = true;
+            }
+            
+            if (moved) {
+                console.log('🎮 Moving to game index:', mainPageGamepad.selectedGameIndex);
+                updateGameSelection();
+                mainPageGamepad.lastInputTime = now;
+            }
+            
+            // A button or X button to launch game
+            if (gamepad.buttons[0]?.pressed || gamepad.buttons[1]?.pressed) {
+                console.log('🎮 Launch button pressed, game index:', mainPageGamepad.selectedGameIndex);
+                if (gameCards[mainPageGamepad.selectedGameIndex]) {
+                    // Click the play button inside the card, not the card itself
+                    const playButton = gameCards[mainPageGamepad.selectedGameIndex].querySelector('.play-button');
+                    if (playButton) {
+                        console.log('🎮 Clicking play button for game');
+                        playButton.click();
+                    } else {
+                        console.log('🎮 Play button not found, trying card click');
+                        gameCards[mainPageGamepad.selectedGameIndex].click();
+                    }
+                    mainPageGamepad.lastInputTime = now;
+                }
+            }
+        }
+        
+        // Update visual selection of games
+        function updateGameSelection() {
+            gameCards = Array.from(document.querySelectorAll('.game-card')); // Refresh list
+            
+            gameCards.forEach((card, index) => {
+                const playButton = card.querySelector('.play-button');
+                
+                if (index === mainPageGamepad.selectedGameIndex) {
+                    // Highlight the selected card
+                    card.style.border = '3px solid #4CAF50';
+                    card.style.boxShadow = '0 0 15px rgba(76, 175, 80, 0.6)';
+                    card.style.transform = 'scale(1.05)';
+                    card.style.transition = 'all 0.2s ease';
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Also highlight the play button
+                    if (playButton) {
+                        playButton.style.backgroundColor = '#4CAF50';
+                        playButton.style.color = 'white';
+                        playButton.style.boxShadow = '0 0 10px rgba(76, 175, 80, 0.8)';
+                        playButton.style.animation = 'pulse 1s infinite';
+                    }
+                    
+                    console.log('🎮 Selected game:', card.querySelector('h3')?.textContent);
+                } else {
+                    // Reset styles for non-selected cards
+                    card.style.border = '';
+                    card.style.boxShadow = '';
+                    card.style.transform = '';
+                    card.style.transition = '';
+                    
+                    // Reset play button styles
+                    if (playButton) {
+                        playButton.style.backgroundColor = '';
+                        playButton.style.color = '';
+                        playButton.style.boxShadow = '';
+                        playButton.style.animation = '';
+                    }
+                }
+            });
+        }
+        
+        // Silent gamepad events with Chrome compatibility
+        window.addEventListener('gamepadconnected', (e) => {
+            console.log('🎮 Gamepad connected silently:', e.gamepad.id);
+            enableGamepadAccess(); // Force enable on connection
+            checkGamepadSilently();
+        });
+        
+        window.addEventListener('gamepaddisconnected', (e) => {
+            console.log('🎮 Gamepad disconnected silently:', e.gamepad.id);
+            checkGamepadSilently();
+        });
+        
+        // Check once on load, then start navigation loop
+        setInterval(checkGamepadSilently, 2000); // Check connection every 2 seconds
+        
+        // Start gamepad navigation loop with higher frequency for better responsiveness
+        let navigationInterval;
+        function startGamepadNavigation() {
+            if (navigationInterval) clearInterval(navigationInterval);
+            navigationInterval = setInterval(() => {
+                if (gameCards.length > 0) {
+                    handleGamepadNavigation();
+                }
+            }, 100); // 10fps for smooth navigation
+        }
+        
+        startGamepadNavigation();
+        
+        // Add manual gamepad test function for Chrome debugging
+        window.testGamepad = function() {
+            enableGamepadAccess();
+            checkGamepadSilently();
+            console.log('🎮 Manual gamepad test:', {
+                userInteracted: mainPageGamepad.userInteracted,
+                connected: mainPageGamepad.connected,
+                gamepadAPI: !!navigator.getGamepads,
+                gamepads: navigator.getGamepads(),
+                gameCards: gameCards.length,
+                browser: navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Other'
+            });
+            
+            // Force navigation initialization
+            gameCards = Array.from(document.querySelectorAll('.game-card'));
+            console.log('🔍 Found', gameCards.length, 'game cards');
+            if (gameCards.length > 0) {
+                updateGameSelection();
+                console.log('🎮 Manual navigation initialization complete');
+            }
+        };
+        
+        // Add debug function to check game cards
+        window.debugGameCards = function() {
+            const cards = Array.from(document.querySelectorAll('.game-card'));
+            console.log('🔍 Game cards debug:', {
+                count: cards.length,
+                catalog: document.getElementById('game-catalog'),
+                catalogChildren: document.getElementById('game-catalog')?.children.length,
+                allCards: cards.map(card => ({
+                    title: card.querySelector('h3')?.textContent,
+                    playButton: !!card.querySelector('.play-button')
+                }))
+            });
+        };
+        
+        console.log('🎮 Debug functions available: testGamepad() and debugGameCards()');
+        console.log('🔧 UPDATED VERSION 20250827b - Navigation debug loaded');
+        
+        console.log('🎮 Gamepad system initialized. Use testGamepad() to debug in Chrome.');
+        
+        // Debug: Check if elements are present - Updated 2025-08-27 19:35
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing components...');
+            
+            // Show gamepad instructions for Chrome users
+            setTimeout(showGamepadInstructions, 1000);
+            
+            // Initialize gamepad silently
+            checkGamepadSilently();
+            
+            // Initialize game selection AFTER games are loaded with observer
+            function initializeGameNavigation() {
+                console.log('🔍 Trying to initialize game navigation...');
+                gameCards = Array.from(document.querySelectorAll('.game-card'));
+                console.log('🔍 Found game cards:', gameCards.length);
+                
+                if (gameCards.length > 0) {
+                    updateGameSelection();
+                    console.log('🎮 Game navigation initialized with', gameCards.length, 'games');
+                    console.log('🔍 Game cards:', gameCards.map(card => card.querySelector('h3')?.textContent));
+                    return true;
+                }
+                console.log('🔍 No game cards found yet...');
+                return false;
+            }
+            
+            // Try immediate initialization
+            console.log('🔍 Attempting immediate game navigation initialization...');
+            if (!initializeGameNavigation()) {
+                console.log('🔍 Immediate init failed, setting up MutationObserver...');
+                // If not ready, use MutationObserver to wait for game cards
+                const observer = new MutationObserver((mutations) => {
+                    console.log('🔍 MutationObserver detected changes:', mutations.length);
+                    for (let mutation of mutations) {
+                        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                            console.log('🔍 Child nodes added:', mutation.addedNodes.length);
+                            // Check if any added nodes contain game cards
+                            for (let node of mutation.addedNodes) {
+                                if (node.nodeType === Node.ELEMENT_NODE) {
+                                    console.log('🔍 Checking node:', node.className, node.tagName);
+                                    if (node.classList?.contains('game-card') || 
+                                        node.querySelector?.('.game-card')) {
+                                        console.log('🔍 Found game card or container with game cards!');
+                                        if (initializeGameNavigation()) {
+                                            observer.disconnect();
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+                
+                // Fallback: stop observing after 5 seconds
+                setTimeout(() => {
+                    console.log('🔍 MutationObserver timeout, trying final initialization...');
+                    observer.disconnect();
+                    initializeGameNavigation(); // Try one more time
+                }, 5000);
+                
+                // Additional fallback: try every second for 10 seconds
+                let attempts = 0;
+                const retryInterval = setInterval(() => {
+                    attempts++;
+                    console.log(`🔍 Retry attempt ${attempts}/10`);
+                    if (initializeGameNavigation() || attempts >= 10) {
+                        clearInterval(retryInterval);
+                    }
+                }, 1000);
+            } else {
+                console.log('🎮 Game navigation initialized immediately!');
+            }
+            
+            // Force user manager initialization
+            setTimeout(() => {
+                if (window.userManager) {
+                    console.log('User manager initialized and calling updateUserDisplay');
+                    window.userManager.updateUserDisplay();
+                } else {
+                    console.error('UserManager not found after timeout!');
+                }
+            }, 500);
+        });
+        
+        // Service Worker temporaneamente disabilitato per debug
+        // Rimuovi questo commento per riattivare il PWA
+        /*
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('✅ SW registered successfully:', registration.scope);
+                        
+                        // Handle updates
+                        registration.addEventListener('updatefound', () => {
+                            console.log('SW: Update found');
+                        });
+                    })
+                    .catch((registrationError) => {
+                        console.log('❌ SW registration failed:', registrationError);
+                    });
+                    
+                // Listen for SW messages
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    console.log('SW message:', event.data);
+                });
+                
+                // Handle SW errors
+                navigator.serviceWorker.addEventListener('error', (error) => {
+                    console.log('SW error:', error);
+                });
+            });
+        } else {
+            console.log('Service Worker not supported');
+        }
+        */
+        console.log('🔧 Service Worker temporaneamente disabilitato per debug');
+        
+        // Global error handler per catturare errori di estensioni
+        window.addEventListener('error', (error) => {
+            if (error.message.includes('message channel closed')) {
+                console.log('🔇 Errore di estensione ignorato:', error.message);
+                return true; // Impedisce la propagazione
+            }
+        });
+        
+        window.addEventListener('unhandledrejection', (event) => {
+            if (event.reason && event.reason.message && event.reason.message.includes('message channel closed')) {
+                console.log('🔇 Promise rejection di estensione ignorata:', event.reason);
+                event.preventDefault(); // Impedisce la propagazione
+            }
+        });
+    </script>
+</body>
+</html>

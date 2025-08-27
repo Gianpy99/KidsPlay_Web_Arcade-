@@ -1,0 +1,2901 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speedy Adventures - KidsPlay</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 50%, #FECFEF 100%);
+            font-family: 'Comic Sans MS', cursive;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .game-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            border-radius: 10px;
+            margin: 1rem auto;
+            max-width: 800px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .header-left {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .game-header h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .user-section button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+        
+        .user-section button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .controls-info {
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        
+        .game-canvas {
+            border: 3px solid #2c3e50;
+            border-radius: 10px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        
+        .player {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-image: url('./assets/sonic-character.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: transform 0.1s ease;
+            z-index: 10;
+        }
+        
+        /* Remove pseudo-elements since we're using SVG */
+        .player::before,
+        .player::after {
+            display: none;
+        }
+        
+        /* Remove mouth since we're using SVG */
+        .player .mouth {
+            display: none;
+        }
+        
+        .player.jumping {
+            animation: sonic-jump 0.5s ease;
+            transform: rotate(360deg);
+        }
+        
+        .player.running {
+            animation: sonic-run 0.2s infinite;
+        }
+        
+        .player.spin-dash {
+            animation: spin-dash 0.1s infinite;
+        }
+        
+        .player.super-speed {
+            filter: blur(1px);
+            transform: scale(1.05);
+            animation: super-speed-trail 0.1s infinite alternate;
+        }
+        
+        .gem {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            border: 4px solid #FFD700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            animation: ring-spin 2s linear infinite;
+            z-index: 5;
+            box-shadow: 0 0 15px rgba(255,215,0,0.6), inset 0 0 10px rgba(255,255,255,0.3);
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+        }
+        
+        .gem.collected {
+            animation: ring-collect 0.6s ease forwards;
+        }
+        
+        .obstacle {
+            position: absolute;
+            background: linear-gradient(45deg, #8B4513, #A0522D);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            z-index: 5;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .platform {
+            position: absolute;
+            background-image: url('./assets/wooden-platform.svg');
+            background-size: cover;
+            background-repeat: repeat-x;
+            background-position: center;
+            border-radius: 3px;
+            z-index: 3;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .finish-line {
+            position: absolute;
+            width: 20px;
+            height: 200px;
+            background: linear-gradient(to bottom, #228B22 0%, #32CD32 50%, #228B22 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            border-radius: 3px;
+            box-shadow: 0 0 10px rgba(0,255,0,0.5);
+            z-index: 8;
+        }
+
+        .finish-line::before {
+            content: '🏁';
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            font-size: 40px;
+            width: 60px;
+            height: 40px;
+            background: linear-gradient(45deg, #FF0000, #FFFFFF, #FF0000, #FFFFFF);
+            background-size: 20px 20px;
+            border: 3px solid #000;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: flag-wave 1s ease-in-out infinite alternate;
+        }
+
+        .finish-line::after {
+            content: 'GOAL!';
+            position: absolute;
+            bottom: -30px;
+            left: -15px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            animation: goal-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes flag-wave {
+            0% { transform: rotate(-2deg); }
+            100% { transform: rotate(2deg); }
+        }
+
+        @keyframes goal-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        @keyframes score-pulse {
+            0%, 100% { transform: scale(1) translateY(0px); opacity: 1; }
+            50% { transform: scale(1.1) translateY(-5px); opacity: 0.9; }
+        }
+
+        @keyframes scorePopup {
+            0% { 
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-30px) scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-60px) scale(0.8);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(100px); }
+            20%, 80% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(100px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .config-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            z-index: 2000;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .config-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #3498db;
+            min-width: 400px;
+            max-width: 600px;
+        }
+
+        .config-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .config-item.selected {
+            background: rgba(52, 152, 219, 0.3);
+            border: 2px solid #3498db;
+        }
+
+        .config-slider {
+            width: 150px;
+            margin: 0 10px;
+        }
+
+        .config-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .config-button:hover, .config-button.selected {
+            background: #2980b9;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+        }
+
+        .binding-button {
+            background: #e74c3c;
+            min-width: 120px;
+        }
+
+        .binding-button.listening {
+            background: #f39c12;
+            animation: pulse 1s infinite;
+        }
+        
+        .enemy {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(145deg, #FF4444, #CC1111);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            animation: enemy-move 3s linear infinite;
+            z-index: 5;
+            border: 2px solid #990000;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4), 
+                        inset 0 1px 2px rgba(255,255,255,0.3);
+        }
+        
+        .powerup {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(45deg, #9932CC, #8A2BE2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            animation: powerup-float 2s ease-in-out infinite;
+            z-index: 5;
+        }
+        
+        .background-element {
+            position: absolute;
+            opacity: 0.6;
+            z-index: 1;
+            animation: scroll-background 10s linear infinite;
+        }
+        
+        .cloud {
+            font-size: 2rem;
+            color: white;
+        }
+        
+        .tree {
+            font-size: 4rem; /* Aumentato da 2.5rem per migliore proporzione */
+            bottom: 60px; /* Allineato esattamente al groundLevel */
+        }
+        
+        .game-ui {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .ui-item {
+            background: rgba(255,255,255,0.9);
+            padding: 8px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-weight: bold;
+        }
+        
+        .progress-bar {
+            width: 200px;
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4285F4, #00FF7F);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+        
+        .speed-boost {
+            background: linear-gradient(45deg, #FF1493, #FF69B4);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            animation: speed-pulse 0.5s infinite;
+        }
+        
+        .leaderboard {
+            position: fixed;
+            top: 120px;
+            right: 20px;
+            width: 220px; /* Aumentato da 200px per far spazio ai nomi */
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+            font-size: 12px;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+        }
+        
+        .leaderboard h3 {
+            margin: 0 0 10px 0;
+            text-align: center;
+            color: #FFD700;
+            font-size: 14px;
+        }
+        
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .leaderboard-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .leaderboard-rank {
+            font-weight: bold;
+            color: #FFD700;
+            width: 25px;
+        }
+        
+        .leaderboard-score {
+            color: #00FF7F;
+            font-weight: bold;
+        }
+        
+        .leaderboard-entry.current-score {
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 5px;
+            padding: 5px;
+            margin: 2px 0;
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .back-button:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            color: #2c3e50;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        
+        .control-btn:hover, .control-btn:active {
+            background: linear-gradient(45deg, #44A08D, #4ECDC4);
+            transform: translateY(-2px);
+        }
+        
+        .jump-btn {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E8E) !important;
+        }
+        
+        .restart-btn {
+            background: linear-gradient(45deg, #27AE60, #2ECC71);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            font-family: inherit;
+            margin: 0.5rem;
+        }
+        
+        @keyframes sonic-jump {
+            0% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(90deg); }
+            50% { transform: translateY(-30px) rotate(180deg); }
+            75% { transform: translateY(-15px) rotate(270deg); }
+            100% { transform: translateY(0) rotate(360deg); }
+        }
+        
+        @keyframes sonic-run {
+            0%, 100% { transform: scaleX(1) scaleY(1); }
+            25% { transform: scaleX(1.1) scaleY(0.9); }
+            50% { transform: scaleX(0.9) scaleY(1.1); }
+            75% { transform: scaleX(1.1) scaleY(0.9); }
+        }
+        
+        @keyframes spin-dash {
+            0% { transform: rotate(0deg) scale(0.8); }
+            100% { transform: rotate(360deg) scale(1.2); }
+        }
+        
+        @keyframes super-speed-trail {
+            0% { box-shadow: -2px 0 4px rgba(66, 133, 244, 0.6); }
+            100% { box-shadow: -4px 0 8px rgba(66, 133, 244, 0.4); }
+        }
+        
+        @keyframes ring-collect {
+            0% { transform: scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1.5) rotate(180deg); opacity: 0.8; }
+            100% { transform: scale(0) rotate(360deg); opacity: 0; }
+        }
+        
+        @keyframes ring-spin {
+            0% { transform: rotateY(0deg); box-shadow: 0 0 15px rgba(255,215,0,0.6); }
+            50% { transform: rotateY(90deg); box-shadow: 0 0 25px rgba(255,215,0,0.8); }
+            100% { transform: rotateY(180deg); box-shadow: 0 0 15px rgba(255,215,0,0.6); }
+        }
+        
+        @keyframes enemy-move {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(20px); }
+        }
+        
+        @keyframes powerup-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes scroll-background {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        @keyframes speed-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes level-complete {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .level-complete-animation {
+            animation: level-complete 0.6s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .game-canvas {
+                width: 90vw;
+                height: 300px;
+            }
+            
+            .player {
+                width: 30px;
+                height: 30px;
+                font-size: 1.2rem;
+            }
+            
+            .gem, .powerup, .enemy {
+                width: 25px;
+                height: 25px;
+                font-size: 1rem;
+            }
+            
+            .control-buttons {
+                margin-top: 10px;
+            }
+            
+            .control-btn {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .game-canvas {
+                width: 800px;
+                height: 400px;
+            }
+            
+            .control-buttons {
+                display: none; /* Hide touch controls on desktop */
+            }
+        }
+        
+        /* Fireworks Animation */
+        .fireworks-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999; /* Very high z-index to be above everything */
+            overflow: hidden;
+        }
+        
+        .firework {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: firework 2.5s ease-out forwards;
+            box-shadow: 0 0 15px rgba(255,255,255,0.9), 0 0 25px currentColor;
+        }
+        
+        .firework::before,
+        .firework::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: firework-particle 2s ease-out forwards;
+            box-shadow: 0 0 12px rgba(255,255,255,0.7), 0 0 20px currentColor;
+        }
+        
+        .firework::before {
+            background: #FFD23F; /* Giallo brillante */
+            animation-delay: 0.3s;
+            transform: translate(-15px, -15px);
+        }
+        
+        .firework::after {
+            background: #32CD32; /* Verde lime */
+            animation-delay: 0.6s;
+            transform: translate(15px, -15px);
+        }
+        
+        @keyframes firework {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 1;
+            }
+            15% {
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(20vh) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(20vh) scale(2);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes firework-particle {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            30% {
+                transform: scale(1.5) rotate(90deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(4) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .sparkle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: sparkle 2s ease-in-out infinite alternate;
+            box-shadow: 0 0 8px currentColor, 0 0 12px rgba(255,255,255,0.8);
+        }
+        
+        @keyframes sparkle {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(2) rotate(180deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(0.5) rotate(360deg);
+                opacity: 0.2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../../../index.html" class="back-button">
+        ← Torna ai Giochi
+    </a>
+    
+    <div class="game-header">
+        <div class="header-left">
+            <h1>⚡ Speedy Adventures</h1>
+            <div class="controls-info">
+                <p><strong>Corri, salta e raccogli gemme!</strong> Evita gli ostacoli e raggiungi il traguardo!</p>
+            </div>
+        </div>
+        <div class="user-section">
+            <div class="user-info" style="display: none;">
+                👤 <span class="current-username">Ospite</span>
+                <button id="logoutBtn" onclick="typeof logoutUser === 'function' ? logoutUser() : void(0)" style="display: none;">🚪 Logout</button>
+            </div>
+            <button id="loginBtn" onclick="typeof loginUser === 'function' ? loginUser() : void(0)">🔑 Login</button>
+        </div>
+    </div>
+    
+    <div class="controls-info" style="max-width: 800px; margin: 0 auto; padding: 0 1rem;">
+            <p>🎮 <strong>Tastiera:</strong> Frecce/WASD per muoverti, Spazio per saltare, ESC per configurazione</p>
+            <p>🎮 <strong>Gamepad:</strong> D-pad/Stick sinistro per muoverti, A/B per saltare</p>
+            <p>🎮 <strong>Menu Gamepad:</strong> D-pad per navigare, A/B per selezionare, Options per configurazione</p>
+        </div>
+    </div>
+    
+    <div class="game-ui">
+        <div class="ui-item">
+            💎 Gemme: <span id="gems">0</span>
+        </div>
+        <div class="ui-item">
+            🏆 Punteggio: <span id="score">0</span>
+        </div>
+        <div class="ui-item">
+            🚀 Livello: <span id="level">1</span>
+        </div>
+        <div class="ui-item">
+            ❤️ Vite: <span id="lives">3</span>
+        </div>
+        <div class="ui-item">
+            🌍 Progresso: <span id="progress">0%</span>
+        </div>
+        <div class="ui-item">
+            <button class="config-button" onclick="openConfig()" style="padding: 5px 10px; font-size: 12px;" title="Configurazione Gioco">⚙️</button>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="ui-item" id="speedBoost" style="display: none;">
+            <div class="speed-boost">⚡ VELOCITÀ!</div>
+        </div>
+    </div>
+    
+    <!-- Leaderboard -->
+    <div class="leaderboard" id="leaderboard">
+        <h3>🏆 TOP 10</h3>
+        <div id="leaderboard-list">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+    
+    <div class="game-canvas" id="gameCanvas">
+        <!-- Game elements will be added dynamically -->
+    </div>
+    
+    <!-- Fireworks animation container -->
+    <div class="fireworks-container" id="fireworksContainer"></div>
+    
+    <div class="control-buttons">
+        <button class="control-btn" onmousedown="handleTouch('left')" onmouseup="handleTouchEnd()" ontouchstart="handleTouch('left')" ontouchend="handleTouchEnd()">⬅️ Sinistra</button>
+        <button class="control-btn jump-btn" onmousedown="handleTouch('jump')" ontouchstart="handleTouch('jump')">⬆️ Salta</button>
+        <button class="control-btn" onmousedown="handleTouch('right')" onmouseup="handleTouchEnd()" ontouchstart="handleTouch('right')" ontouchend="handleTouchEnd()">➡️ Destra</button>
+    </div>
+    
+    <div class="game-over" id="gameOverDialog">
+        <h2 id="gameOverTitle">🎉 Livello Completato!</h2>
+        <p id="gameOverText">Ottimo lavoro! Hai raccolto tutte le gemme!</p>
+        <p>Punteggio: <span id="finalScore">0</span></p>
+        <p>Gemme Raccolte: <span id="finalGems">0</span></p>
+        <button class="restart-btn" onclick="nextLevel()" id="nextLevelBtn">Livello Successivo! 🚀</button>
+        <button class="restart-btn" onclick="restartGame()" id="restartBtn">Riprova Livello 🔄</button>
+        <button class="restart-btn" onclick="resetSession()" id="resetBtn" style="background: #dc3545;">Reset Sessione 🎮</button>
+        <button class="restart-btn" onclick="openConfig()" id="configBtn" style="background: #6c757d;">⚙️ Configurazione</button>
+    </div>
+
+    <!-- Configuration Menu -->
+    <div class="config-menu" id="configMenu">
+        <div class="config-content">
+            <h2>⚙️ Configurazione Gioco</h2>
+            
+            <div class="config-section">
+                <h3>🎮 Velocità Gioco</h3>
+                <div class="config-item" data-config="speed">
+                    <span>Velocità Movimento:</span>
+                    <input type="range" class="config-slider" id="speedSlider" min="2" max="8" value="5" step="1">
+                    <span id="speedValue">5</span>
+                </div>
+                <div class="config-item" data-config="jump">
+                    <span>Forza Salto:</span>
+                    <input type="range" class="config-slider" id="jumpSlider" min="12" max="22" value="18" step="1">
+                    <span id="jumpValue">18</span>
+                </div>
+                <div class="config-item" data-config="gravity">
+                    <span>Gravità:</span>
+                    <input type="range" class="config-slider" id="gravitySlider" min="0.5" max="1.2" value="0.8" step="0.1">
+                    <span id="gravityValue">0.8</span>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>🎮 Controlli Gamepad (DualSense)</h3>
+                <p style="font-size: 12px; color: #bbb; margin-bottom: 15px;">
+                    💡 Clicca su un pulsante e premi il tasto desiderato sul gamepad. Premi ESC o "Annulla" per interrompere.
+                </p>
+                <div class="config-item" data-config="jump-btn">
+                    <span>Pulsante Salto:</span>
+                    <button class="config-button binding-button" id="jumpBinding" onclick="bindButton('jump')">❌ (X)</button>
+                    <button class="config-button" onclick="cancelBinding()" style="background: #6c757d; margin-left: 5px; font-size: 10px;">Annulla</button>
+                </div>
+                <div class="config-item" data-config="menu-btn">
+                    <span>Pulsante Menu:</span>
+                    <button class="config-button binding-button" id="menuBinding" onclick="bindButton('menu')">OPTIONS</button>
+                    <button class="config-button" onclick="cancelBinding()" style="background: #6c757d; margin-left: 5px; font-size: 10px;">Annulla</button>
+                </div>
+                <div class="config-item" data-config="deadzone">
+                    <span>Deadzone Stick:</span>
+                    <input type="range" class="config-slider" id="deadzoneSlider" min="0.1" max="0.5" value="0.2" step="0.05">
+                    <span id="deadzoneValue">0.2</span>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <button class="config-button" onclick="saveConfig()">💾 Salva</button>
+                <button class="config-button" onclick="resetConfig()">🔄 Reset Default</button>
+                <button class="config-button" onclick="closeConfig()">❌ Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../../js/user-manager.js"></script>
+    <script>
+        class SpeedyAdventuresGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.player = null;
+                
+                // Initialize audio context once
+                this.audioContext = null;
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.warn('AudioContext not available:', e);
+                }
+                
+                this.gameElements = [];
+                this.gems = [];
+                this.obstacles = [];
+                this.enemies = [];
+                this.powerups = [];
+                this.platforms = [];
+                
+                this.gameState = {
+                    level: 1,
+                    score: 0,
+                    gems: 0,
+                    lives: 3,
+                    gameRunning: true,
+                    showingRecap: false, // Flag per prevenire input durante recap
+                    celebrating: false // Flag per bloccare input durante celebrazione fuochi d'artificio
+                };
+                
+                this.player = {
+                    x: 50,
+                    y: 300,
+                    width: 50,
+                    height: 50,
+                    velocityY: 0,
+                    onGround: false,
+                    isJumping: false,
+                    direction: 1, // 1 for right, -1 for left
+                    spindash: false
+                };
+                
+                // Camera system for side-scrolling
+                this.camera = {
+                    x: 0,
+                    y: 0,
+                    target: this.player,
+                    smoothing: 0.1
+                };
+                
+                // World dimensions
+                this.world = {
+                    width: 3000, // Much wider world
+                    height: 600
+                };
+                
+                // Game loop control
+                this.isGameLoopRunning = false;
+                
+                this.keys = {
+                    left: false,
+                    right: false,
+                    up: false,
+                    down: false,
+                    space: false
+                };
+                
+                this.touchControls = {
+                    left: false,
+                    right: false
+                };
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupCanvas();
+                this.createPlayer();
+                this.generateLevel();
+                this.setupControls();
+                this.setupGamepad(); // Add gamepad support
+                this.updateGamepadIndicator(); // Initialize gamepad indicator
+                this.loadLeaderboard(); // Load and display leaderboard
+                // Force initial position update
+                this.updateElementPositions();
+                this.gameLoop();
+                this.updateUI();
+                
+                // Setup config UI after DOM is ready
+                setTimeout(() => this.updateConfigUI(), 100);
+            }
+            
+            setupCanvas() {
+                // Get canvas dimensions
+                const rect = this.canvas.getBoundingClientRect();
+                this.canvasWidth = rect.width;
+                this.canvasHeight = rect.height;
+                
+                // Set ground level
+                this.groundLevel = this.canvasHeight - 60;
+                this.player.y = this.groundLevel - this.player.height;
+            }
+            
+            createPlayer() {
+                const playerElement = document.createElement('div');
+                playerElement.className = 'player';
+                
+                // Using SVG background - no additional elements needed
+                
+                // Initial position will be set by updateElementPositions()
+                this.canvas.appendChild(playerElement);
+                this.playerElement = playerElement;
+            }
+            
+            setupGamepad() {
+                // Enhanced global gamepad integration with persistence
+                if (window.userManager && window.userManager.getGamepadState) {
+                    const globalGamepad = window.userManager.getGamepadState();
+                    console.log('🎮 Using global gamepad state:', globalGamepad);
+                    
+                    this.gamepad = {
+                        connected: globalGamepad.connected,
+                        index: globalGamepad.index,
+                        deadzone: 0.2,
+                        buttons: {},
+                        previousButtons: {},
+                        menuNavigation: {
+                            enabled: false,
+                            selectedIndex: 0,
+                            lastInputTime: 0
+                        }
+                    };
+                    
+                    // Auto-reconnect gamepad if lost
+                    setInterval(() => {
+                        if (window.userManager && window.userManager.getGamepadState) {
+                            const currentState = window.userManager.getGamepadState();
+                            if (currentState.connected && !this.gamepad.connected) {
+                                console.log('🎮 Auto-reconnecting gamepad in game');
+                                this.gamepad.connected = true;
+                                this.gamepad.index = currentState.index;
+                            } else if (!currentState.connected && this.gamepad.connected) {
+                                console.log('🎮 Gamepad lost in game');
+                                this.gamepad.connected = false;
+                                this.gamepad.index = -1;
+                            }
+                        }
+                    }, 1000); // Check every second
+                } else {
+                    // Fallback to local gamepad management
+                    this.gamepad = {
+                        connected: false,
+                        index: -1,
+                        deadzone: 0.2,
+                        buttons: {},
+                        previousButtons: {},
+                        menuNavigation: {
+                            enabled: false,
+                            selectedIndex: 0,
+                            lastInputTime: 0
+                        }
+                    };
+                }
+                
+                // Gamepad connection events (still listen for updates)
+                window.addEventListener('gamepadconnected', (e) => {
+                    console.log('Gamepad connected in game:', e.gamepad.id);
+                    this.gamepad.connected = true;
+                    this.gamepad.index = e.gamepad.index;
+                    this.showGamepadMessage('🎮 Gamepad connesso! Use D-pad per navigare menu');
+                });
+                
+                window.addEventListener('gamepaddisconnected', (e) => {
+                    console.log('Gamepad disconnected');
+                    this.gamepad.connected = false;
+                    this.gamepad.index = -1;
+                    this.gamepad.menuNavigation.enabled = false;
+                    this.showGamepadMessage('🎮 Gamepad disconnesso');
+                });
+            }
+            
+            showGamepadMessage(message) {
+                // Create temporary message
+                const msg = document.createElement('div');
+                msg.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: rgba(0,0,0,0.8);
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 10px;
+                    font-weight: bold;
+                    z-index: 1000;
+                    animation: fadeInOut 3s ease-in-out;
+                `;
+                msg.textContent = message;
+                document.body.appendChild(msg);
+                setTimeout(() => msg.remove(), 3000);
+                
+                // Show/hide gamepad controls indicator
+                this.updateGamepadIndicator();
+            }
+            
+            updateGamepadIndicator() {
+                let indicator = document.getElementById('gamepadIndicator');
+                
+                if (this.gamepad.connected) {
+                    if (!indicator) {
+                        indicator = document.createElement('div');
+                        indicator.id = 'gamepadIndicator';
+                        indicator.style.cssText = `
+                            position: fixed;
+                            bottom: 20px;
+                            right: 20px;
+                            background: rgba(0,128,0,0.8);
+                            color: white;
+                            padding: 8px 12px;
+                            border-radius: 8px;
+                            font-size: 12px;
+                            font-weight: bold;
+                            z-index: 999;
+                            animation: pulse 2s infinite;
+                        `;
+                        indicator.innerHTML = '🎮 Gamepad Attivo<br><small>D-pad: naviga | A/B: seleziona | Start: menu</small>';
+                        document.body.appendChild(indicator);
+                    }
+                } else {
+                    if (indicator) {
+                        indicator.remove();
+                    }
+                }
+            }
+            
+            updateGamepad() {
+                // CELEBRAZIONE: Blocca tutti gli input durante i fuochi d'artificio
+                if (this.gameState && this.gameState.celebrating) {
+                    // Durante la celebrazione, ignora completamente tutti gli input
+                    return;
+                }
+                
+                // ENHANCED: Aggressive sync with global gamepad state
+                if (window.userManager && window.userManager.getGamepadState) {
+                    const globalGamepad = window.userManager.getGamepadState();
+                    
+                    // Always sync state, not just on changes
+                    if (globalGamepad.connected) {
+                        if (!this.gamepad.connected || this.gamepad.index !== globalGamepad.index) {
+                            console.log('🎮 FORCE syncing gamepad state:', globalGamepad);
+                            this.gamepad.connected = true;
+                            this.gamepad.index = globalGamepad.index;
+                            this.updateGamepadIndicator();
+                        }
+                    } else if (this.gamepad.connected) {
+                        console.log('🎮 Global gamepad disconnected, syncing...');
+                        this.gamepad.connected = false;
+                        this.gamepad.index = -1;
+                        this.updateGamepadIndicator();
+                    }
+                    
+                    // Double-check with actual gamepad API
+                    const gamepads = navigator.getGamepads();
+                    let realGamepadFound = false;
+                    for (let i = 0; i < gamepads.length; i++) {
+                        if (gamepads[i] && gamepads[i].connected) {
+                            realGamepadFound = true;
+                            if (!this.gamepad.connected) {
+                                console.log('🎮 Physical gamepad detected, forcing reconnection');
+                                this.gamepad.connected = true;
+                                this.gamepad.index = i;
+                                this.updateGamepadIndicator();
+                                
+                                // Update global state too
+                                if (window.userManager && window.userManager.updateGamepadState) {
+                                    window.userManager.updateGamepadState(true, i);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                
+                if (!this.gamepad.connected) {
+                    // Reset gamepad-related keys when gamepad is not connected
+                    return;
+                }
+                
+                const gamepads = navigator.getGamepads();
+                const gamepad = gamepads[this.gamepad.index];
+                
+                if (!gamepad) {
+                    // Reset gamepad-related keys when gamepad is not available
+                    return;
+                }
+                
+                // Store previous button states
+                this.gamepad.previousButtons = { ...this.gamepad.buttons };
+                
+                // Check if we're in a menu (game over dialog or config menu visible) or showing recap
+                const gameOverDialog = document.getElementById('gameOverDialog');
+                const configMenu = document.getElementById('configMenu');
+                const isMenuVisible = gameOverDialog.style.display === 'block' || 
+                                     configMenu.style.display === 'block' || 
+                                     (this.gameState && this.gameState.showingRecap === true);
+                
+                if (isMenuVisible) {
+                    this.handleMenuNavigation(gamepad);
+                } else {
+                    // Normal gameplay controls
+                    this.handleGameplayControls(gamepad);
+                }
+            }
+            
+            handleMenuNavigation(gamepad) {
+                // Skip menu navigation if we're binding buttons
+                if (bindingMode) return;
+                
+                const currentTime = Date.now();
+                
+                // D-pad navigation with timing to prevent rapid triggering
+                const dpadUp = gamepad.buttons[12]?.pressed;
+                const dpadDown = gamepad.buttons[13]?.pressed;
+                const dpadLeft = gamepad.buttons[14]?.pressed;
+                const dpadRight = gamepad.buttons[15]?.pressed;
+                const buttonA = gamepad.buttons[0]?.pressed;
+                const buttonB = gamepad.buttons[1]?.pressed;
+                const buttonStart = gamepad.buttons[9]?.pressed; // Start button for main menu
+                
+                // Get visible menu buttons
+                const visibleButtons = this.getVisibleMenuButtons();
+                
+                if (visibleButtons.length === 0) return;
+                
+                // Enable menu navigation mode
+                if (!this.gamepad.menuNavigation.enabled) {
+                    this.gamepad.menuNavigation.enabled = true;
+                    this.gamepad.menuNavigation.selectedIndex = 0;
+                    this.highlightMenuButton(visibleButtons, 0);
+                }
+                
+                // Navigation with timing control (prevent rapid fire)
+                if (currentTime - this.gamepad.menuNavigation.lastInputTime > 200) {
+                    if (dpadUp || dpadLeft) {
+                        this.gamepad.menuNavigation.selectedIndex = 
+                            (this.gamepad.menuNavigation.selectedIndex - 1 + visibleButtons.length) % visibleButtons.length;
+                        this.highlightMenuButton(visibleButtons, this.gamepad.menuNavigation.selectedIndex);
+                        this.gamepad.menuNavigation.lastInputTime = currentTime;
+                    } else if (dpadDown || dpadRight) {
+                        this.gamepad.menuNavigation.selectedIndex = 
+                            (this.gamepad.menuNavigation.selectedIndex + 1) % visibleButtons.length;
+                        this.highlightMenuButton(visibleButtons, this.gamepad.menuNavigation.selectedIndex);
+                        this.gamepad.menuNavigation.lastInputTime = currentTime;
+                    }
+                }
+                
+                // Button activation
+                if ((buttonA || buttonB) && !this.gamepad.previousButtons.action) {
+                    const selectedButton = visibleButtons[this.gamepad.menuNavigation.selectedIndex];
+                    if (selectedButton) {
+                        selectedButton.click();
+                        this.gamepad.menuNavigation.enabled = false;
+                    }
+                }
+                
+                // Main menu navigation (Start button or configured menu button)
+                if ((buttonStart || gamepad.buttons[this.config.gamepad.menuButton]?.pressed) && 
+                    !this.gamepad.previousButtons.start) {
+                    this.goToMainMenu();
+                }
+                
+                // Store button states
+                this.gamepad.buttons = {
+                    action: buttonA || buttonB,
+                    start: buttonStart
+                };
+            }
+            
+            handleGameplayControls(gamepad) {
+                // Skip gamepad input if we're in binding mode
+                if (bindingMode) return;
+                
+                // Double-check gamepad is actually connected and valid
+                if (!gamepad || !gamepad.connected) return;
+                
+                // Gameplay controls using configuration
+                const leftStickX = gamepad.axes[0] || 0;
+                const leftStickY = gamepad.axes[1] || 0;
+                const dpadLeft = gamepad.buttons[14]?.pressed || false;
+                const dpadRight = gamepad.buttons[15]?.pressed || false;
+                const dpadUp = gamepad.buttons[12]?.pressed || false;
+                
+                // Movement (D-pad or left stick) using configured deadzone
+                this.keys.left = dpadLeft || leftStickX < -this.config.gamepad.deadzone;
+                this.keys.right = dpadRight || leftStickX > this.config.gamepad.deadzone;
+                
+                // Jump using configured button
+                const jumpPressed = gamepad.buttons[this.config.gamepad.jumpButton]?.pressed || // Configured jump button
+                                   dpadUp ||
+                                   leftStickY < -this.config.gamepad.deadzone;
+                
+                this.keys.up = jumpPressed;
+                
+                // Open config with configured menu button
+                const menuButtonPressed = gamepad.buttons[this.config.gamepad.menuButton]?.pressed;
+                if (menuButtonPressed && !this.gamepad.previousButtons.menu) {
+                    openConfig();
+                }
+                
+                // Store button states
+                this.gamepad.previousButtons.menu = menuButtonPressed;
+                
+                // Reset menu navigation when in game
+                this.gamepad.menuNavigation.enabled = false;
+            }
+            
+            resetGamepadInputs() {
+                // Reset any gamepad-controlled keys to prevent phantom movement
+                // Clear all button states to prevent input bleeding between levels
+                console.log('🎮 Resetting gamepad inputs to prevent button bleeding');
+                
+                // Reset all game-related keys that could be set by gamepad
+                this.keys.ArrowLeft = false;
+                this.keys.ArrowRight = false;
+                this.keys.ArrowUp = false;
+                this.keys.ArrowDown = false;
+                this.keys[' '] = false; // Space for jump
+                this.keys.Enter = false;
+                this.keys.KeyR = false; // Reset key
+                this.keys.KeyC = false; // Config key
+                
+                // Reset gamepad button states if gamepad is connected
+                if (this.gamepad.connected && this.gamepad.state) {
+                    this.gamepad.state.buttons = this.gamepad.state.buttons.map(() => ({ pressed: false, value: 0 }));
+                    this.gamepad.state.axes = this.gamepad.state.axes.map(() => 0);
+                }
+                
+                console.log('🎮 Gamepad input reset complete');
+            }
+            
+            getVisibleMenuButtons() {
+                const configMenu = document.getElementById('configMenu');
+                
+                // If config menu is open, return config buttons
+                if (configMenu.style.display === 'block') {
+                    const buttons = [];
+                    const saveBtn = document.querySelector('#configMenu .config-button[onclick="saveConfig()"]');
+                    const resetBtn = document.querySelector('#configMenu .config-button[onclick="resetConfig()"]');
+                    const closeBtn = document.querySelector('#configMenu .config-button[onclick="closeConfig()"]');
+                    
+                    if (saveBtn) buttons.push(saveBtn);
+                    if (resetBtn) buttons.push(resetBtn);
+                    if (closeBtn) buttons.push(closeBtn);
+                    
+                    return buttons;
+                }
+                
+                // Otherwise return game over menu buttons
+                const buttons = [];
+                const nextLevelBtn = document.getElementById('nextLevelBtn');
+                const restartBtn = document.getElementById('restartBtn');
+                const resetBtn = document.getElementById('resetBtn');
+                const configBtn = document.getElementById('configBtn');
+                
+                if (nextLevelBtn && nextLevelBtn.style.display !== 'none') buttons.push(nextLevelBtn);
+                if (restartBtn && restartBtn.style.display !== 'none') buttons.push(restartBtn);
+                if (resetBtn && resetBtn.style.display !== 'none') buttons.push(resetBtn);
+                if (configBtn) buttons.push(configBtn); // Always show config button
+                
+                return buttons;
+            }
+            
+            highlightMenuButton(buttons, selectedIndex) {
+                // Remove highlight from all buttons
+                buttons.forEach(btn => {
+                    btn.style.border = '';
+                    btn.style.boxShadow = '';
+                    btn.style.transform = '';
+                });
+                
+                // Highlight selected button
+                if (buttons[selectedIndex]) {
+                    const btn = buttons[selectedIndex];
+                    btn.style.border = '3px solid #FFD700';
+                    btn.style.boxShadow = '0 0 15px rgba(255, 215, 0, 0.8)';
+                    btn.style.transform = 'scale(1.05)';
+                }
+            }
+            
+            goToMainMenu() {
+                // Navigate to main menu
+                if (window.parent !== window) {
+                    // If in iframe, try to communicate with parent
+                    window.parent.postMessage('navigate-main-menu', '*');
+                } else {
+                    // Direct navigation
+                    window.location.href = '/';
+                }
+            }
+            
+            loadConfig() {
+                // Load configuration from localStorage
+                const savedConfig = localStorage.getItem('speedyAdventuresConfig');
+                if (savedConfig) {
+                    try {
+                        const parsed = JSON.parse(savedConfig);
+                        this.config = { ...this.config, ...parsed };
+                    } catch (e) {
+                        console.log('Failed to load config, using defaults');
+                    }
+                }
+            }
+            
+            saveConfig() {
+                // Save configuration to localStorage
+                localStorage.setItem('speedyAdventuresConfig', JSON.stringify(this.config));
+            }
+            
+            updateConfigUI() {
+                // Update sliders and displays
+                document.getElementById('speedSlider').value = this.config.movement.speed;
+                document.getElementById('speedValue').textContent = this.config.movement.speed;
+                
+                document.getElementById('jumpSlider').value = this.config.movement.jumpForce;
+                document.getElementById('jumpValue').textContent = this.config.movement.jumpForce;
+                
+                document.getElementById('gravitySlider').value = this.config.movement.gravity;
+                document.getElementById('gravityValue').textContent = this.config.movement.gravity;
+                
+                document.getElementById('deadzoneSlider').value = this.config.gamepad.deadzone;
+                document.getElementById('deadzoneValue').textContent = this.config.gamepad.deadzone;
+                
+                // Update button labels
+                this.updateButtonLabels();
+            }
+            
+            updateButtonLabels() {
+                const jumpBtn = document.getElementById('jumpBinding');
+                const menuBtn = document.getElementById('menuBinding');
+                
+                // DualSense button mapping
+                const buttonNames = {
+                    0: '❌ (X)', 1: '⭕ (Circle)', 2: '🔺 (Triangle)', 3: '🔲 (Square)',
+                    4: 'L1', 5: 'R1', 6: 'L2', 7: 'R2',
+                    8: 'Share', 9: 'Options', 10: 'L3', 11: 'R3',
+                    12: 'D-Up', 13: 'D-Down', 14: 'D-Left', 15: 'D-Right',
+                    16: 'PS Button'
+                };
+                
+                jumpBtn.textContent = buttonNames[this.config.gamepad.jumpButton] || `Button ${this.config.gamepad.jumpButton}`;
+                menuBtn.textContent = buttonNames[this.config.gamepad.menuButton] || `Button ${this.config.gamepad.menuButton}`;
+            }
+            
+            generateLevel() {
+                this.clearLevel();
+                this.levelStartTime = Date.now(); // Track when level started for time bonus
+                this.generateBackground();
+                this.generateGems();
+                this.generateObstacles();
+                this.generateEnemies();
+                this.generatePowerups();
+                this.generatePlatforms();
+                this.generateFinishLine();
+            }
+            
+            clearLevel() {
+                // Remove all game elements except player
+                const elements = this.canvas.querySelectorAll('.gem, .obstacle, .enemy, .powerup, .platform, .background-element, .finish-line');
+                elements.forEach(el => el.remove());
+                
+                this.gems = [];
+                this.obstacles = [];
+                this.enemies = [];
+                this.powerups = [];
+                this.platforms = [];
+                this.comboCount = 0; // Track consecutive gem collection
+                this.lastGemTime = 0; // Track time of last gem collection
+                
+                // Game configuration
+                this.config = {
+                    movement: {
+                        speed: 5,
+                        jumpForce: 18,
+                        gravity: 0.8
+                    },
+                    gamepad: {
+                        jumpButton: 0, // X button on DualSense
+                        menuButton: 9, // Options button on DualSense
+                        deadzone: 0.2
+                    }
+                };
+                
+                this.loadConfig(); // Load saved configuration
+            }
+            
+            generateBackground() {
+                // Add clouds
+                for (let i = 0; i < 3; i++) {
+                    const cloud = document.createElement('div');
+                    cloud.className = 'background-element cloud';
+                    cloud.textContent = '☁️';
+                    cloud.style.left = Math.random() * this.canvasWidth + 'px';
+                    cloud.style.top = Math.random() * 100 + 20 + 'px';
+                    cloud.style.animationDelay = Math.random() * 5 + 's';
+                    this.canvas.appendChild(cloud);
+                }
+                
+                // Add trees
+                for (let i = 0; i < 5; i++) {
+                    const tree = document.createElement('div');
+                    tree.className = 'background-element tree';
+                    tree.textContent = '🌳';
+                    tree.style.left = Math.random() * this.canvasWidth + 'px';
+                    tree.style.animationDelay = Math.random() * 3 + 's';
+                    this.canvas.appendChild(tree);
+                }
+            }
+            
+            generateGems() {
+                const gemCount = Math.min(8 + this.gameState.level * 2, 20); // More gems for bigger world
+                const minJumpHeight = 80; // Minimum reachable height
+                const maxJumpHeight = 120; // Maximum jump height
+                
+                for (let i = 0; i < gemCount; i++) {
+                    // Distribute gems across the entire world width
+                    const sectionWidth = (this.world.width - 300) / gemCount;
+                    const baseX = 150 + (i * sectionWidth);
+                    
+                    const gem = {
+                        x: baseX + Math.random() * (sectionWidth * 0.7), // More controlled X spread
+                        y: this.groundLevel - minJumpHeight - Math.random() * (maxJumpHeight - minJumpHeight),
+                        collected: false
+                    };
+                    
+                    // Ensure some gems are on ground for easier collection
+                    if (i % 3 === 0) {
+                        gem.y = this.groundLevel - 30; // Ground level gems
+                    }
+                    
+                    const gemElement = document.createElement('div');
+                    gemElement.className = 'gem';
+                    gemElement.style.left = gem.x + 'px';
+                    gemElement.style.top = gem.y + 'px';
+                    
+                    this.canvas.appendChild(gemElement);
+                    this.gems.push({ ...gem, element: gemElement });
+                }
+            }
+            
+            generateObstacles() {
+                const obstacleCount = 3 + Math.floor(this.gameState.level / 2);
+                
+                for (let i = 0; i < obstacleCount; i++) {
+                    const obstacle = {
+                        x: 300 + i * (this.world.width / obstacleCount) + Math.random() * 200,
+                        y: this.groundLevel - 40,
+                        width: 30,
+                        height: 40
+                    };
+                    
+                    const obstacleElement = document.createElement('div');
+                    obstacleElement.className = 'obstacle';
+                    obstacleElement.textContent = '🗿';
+                    obstacleElement.style.left = obstacle.x + 'px';
+                    obstacleElement.style.top = obstacle.y + 'px';
+                    obstacleElement.style.width = obstacle.width + 'px';
+                    obstacleElement.style.height = obstacle.height + 'px';
+                    
+                    this.canvas.appendChild(obstacleElement);
+                    this.obstacles.push({ ...obstacle, element: obstacleElement });
+                }
+            }
+            
+            generateEnemies() {
+                if (this.gameState.level > 2) {
+                    const enemyCount = 2 + Math.floor(this.gameState.level / 3);
+                    
+                    for (let i = 0; i < enemyCount; i++) {
+                        const enemy = {
+                            x: 400 + i * (this.world.width / enemyCount) + Math.random() * 300,
+                            y: this.groundLevel - 35,
+                            startX: 0,
+                            range: 50 + Math.random() * 50
+                        };
+                        
+                        enemy.startX = enemy.x;
+                        
+                        const enemyElement = document.createElement('div');
+                        enemyElement.className = 'enemy';
+                        enemyElement.textContent = '🦇';
+                        enemyElement.style.left = enemy.x + 'px';
+                        enemyElement.style.top = enemy.y + 'px';
+                        
+                        this.canvas.appendChild(enemyElement);
+                        this.enemies.push({ ...enemy, element: enemyElement });
+                    }
+                }
+            }
+            
+            generatePowerups() {
+                if (this.gameState.level > 1) {
+                    const powerupCount = 1 + Math.floor(this.gameState.level / 3);
+                    
+                    for (let i = 0; i < powerupCount; i++) {
+                        const powerup = {
+                            x: 120 + i * (this.canvasWidth / powerupCount) + Math.random() * 100,
+                            y: this.groundLevel - 80 - Math.random() * 100,
+                            type: Math.random() < 0.5 ? 'speed' : 'jump',
+                            collected: false
+                        };
+                        
+                        const powerupElement = document.createElement('div');
+                        powerupElement.className = 'powerup';
+                        powerupElement.textContent = powerup.type === 'speed' ? '⚡' : '🦘';
+                        powerupElement.style.left = powerup.x + 'px';
+                        powerupElement.style.top = powerup.y + 'px';
+                        
+                        this.canvas.appendChild(powerupElement);
+                        this.powerups.push({ ...powerup, element: powerupElement });
+                    }
+                }
+            }
+            
+            generatePlatforms() {
+                const platformCount = 3 + Math.floor(this.gameState.level / 2); // More platforms for bigger world
+                
+                for (let i = 0; i < platformCount; i++) {
+                    const platform = {
+                        x: 200 + i * (this.world.width / platformCount) + Math.random() * 200,
+                        y: this.groundLevel - 120 - Math.random() * 100,
+                        width: 80 + Math.random() * 60,
+                        height: 20 // Slightly taller for the stone texture
+                    };
+                    
+                    const platformElement = document.createElement('div');
+                    platformElement.className = 'platform';
+                    platformElement.style.left = platform.x + 'px';
+                    platformElement.style.top = platform.y + 'px';
+                    platformElement.style.width = platform.width + 'px';
+                    platformElement.style.height = platform.height + 'px';
+                    
+                    this.canvas.appendChild(platformElement);
+                    this.platforms.push({ ...platform, element: platformElement });
+                }
+            }
+            
+            generateFinishLine() {
+                // Create Mario-style flagpole at the end of the world
+                const finishLine = {
+                    x: this.world.width - 100,
+                    y: this.groundLevel - 200,
+                    width: 80, // Width for collision detection (wider than visual)
+                    height: 200
+                };
+                
+                const finishElement = document.createElement('div');
+                finishElement.className = 'finish-line';
+                finishElement.innerHTML = ''; // CSS handles the flag and text
+                finishElement.style.left = finishLine.x + 30 + 'px'; // Center the pole
+                finishElement.style.top = finishLine.y + 'px';
+                finishElement.style.width = '20px'; // Visual width of pole
+                finishElement.style.height = finishLine.height + 'px';
+                
+                // Add score preview
+                const scorePreview = document.createElement('div');
+                scorePreview.className = 'flag-score-preview';
+                scorePreview.style.position = 'absolute';
+                scorePreview.style.left = '-40px';
+                scorePreview.style.top = '-50px';
+                scorePreview.style.color = '#FFD700';
+                scorePreview.style.fontWeight = 'bold';
+                scorePreview.style.fontSize = '14px';
+                scorePreview.style.textAlign = 'center';
+                scorePreview.style.textShadow = '2px 2px 4px rgba(0,0,0,0.8)';
+                scorePreview.style.animation = 'score-pulse 2s ease-in-out infinite';
+                scorePreview.style.zIndex = '10';
+                
+                // Calculate potential score
+                const baseScore = this.gameState.level * 1000;
+                const collectedGems = this.gems.filter(gem => gem.collected).length;
+                const totalGems = this.gems.length;
+                const gemsBonus = collectedGems * 200;
+                const livesBonus = this.gameState.lives * 500;
+                const potentialScore = baseScore + gemsBonus + livesBonus;
+                
+                scorePreview.innerHTML = `💰${potentialScore}<br><small>punti</small>`;
+                finishElement.appendChild(scorePreview);
+                
+                this.canvas.appendChild(finishElement);
+                this.finishLine = { ...finishLine, element: finishElement };
+            }
+            
+            setupControls() {
+                document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+                document.addEventListener('keyup', (e) => this.handleKeyUp(e));
+                
+                // Prevent context menu on touch
+                this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+            }
+            
+            handleKeyDown(e) {
+                // CELEBRAZIONE: Blocca tutti gli input durante i fuochi d'artificio
+                if (this.gameState && this.gameState.celebrating) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                // Ignora input durante la fase di recap per evitare azioni accidentali
+                if (this.gameState && this.gameState.showingRecap === true) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                switch (e.code) {
+                    case 'ArrowLeft':
+                    case 'KeyA':
+                        this.keys.left = true;
+                        e.preventDefault();
+                        break;
+                    case 'ArrowRight':
+                    case 'KeyD':
+                        this.keys.right = true;
+                        e.preventDefault();
+                        break;
+                    case 'ArrowUp':
+                    case 'KeyW':
+                    case 'Space':
+                        this.keys.up = true;
+                        e.preventDefault();
+                        break;
+                    case 'ArrowDown':
+                    case 'KeyS':
+                        this.keys.down = true;
+                        e.preventDefault();
+                        break;
+                    case 'Escape':
+                        // If in binding mode, cancel it
+                        if (bindingMode) {
+                            cancelBinding();
+                            e.preventDefault();
+                            return;
+                        }
+                        
+                        // Toggle configuration menu
+                        const configMenu = document.getElementById('configMenu');
+                        if (configMenu.style.display === 'block') {
+                            closeConfig();
+                        } else {
+                            openConfig();
+                        }
+                        e.preventDefault();
+                        break;
+                }
+            }
+            
+            handleKeyUp(e) {
+                // CELEBRAZIONE: Blocca tutti gli input durante i fuochi d'artificio
+                if (this.gameState && this.gameState.celebrating) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                switch (e.code) {
+                    case 'ArrowLeft':
+                    case 'KeyA':
+                        this.keys.left = false;
+                        break;
+                    case 'ArrowRight':
+                    case 'KeyD':
+                        this.keys.right = false;
+                        break;
+                    case 'ArrowUp':
+                    case 'KeyW':
+                    case 'Space':
+                        this.keys.up = false;
+                        break;
+                    case 'ArrowDown':
+                    case 'KeyS':
+                        this.keys.down = false;
+                        break;
+                }
+            }
+            
+            gameLoop() {
+                if (this.isGameLoopRunning) return; // Prevent multiple loops
+                this.isGameLoopRunning = true;
+                
+                // Always update gamepad for menu navigation
+                this.updateGamepad();
+                
+                if (!this.gameState.gameRunning) {
+                    // Still run loop for menu navigation even when game is paused
+                    this.isGameLoopRunning = false;
+                    requestAnimationFrame(() => this.gameLoop());
+                    return;
+                }
+                
+                this.updatePlayer();
+                this.updateCamera();
+                this.updateEnemies();
+                this.checkCollisions();
+                this.updateUI();
+                this.checkLevelComplete();
+                
+                this.isGameLoopRunning = false;
+                requestAnimationFrame(() => this.gameLoop());
+            }
+            
+            updateCamera() {
+                // Keep player in center-left of screen for forward movement
+                const targetX = this.player.x - this.canvasWidth * 0.3;
+                
+                // Smooth camera movement
+                this.camera.x += (targetX - this.camera.x) * this.camera.smoothing;
+                
+                // Clamp camera to world bounds
+                this.camera.x = Math.max(0, Math.min(this.camera.x, this.world.width - this.canvasWidth));
+                
+                // Update all game objects positions based on camera
+                this.updateElementPositions();
+            }
+            
+            updateElementPositions() {
+                // Update player visual position relative to camera
+                this.playerElement.style.left = (this.player.x - this.camera.x) + 'px';
+                this.playerElement.style.top = this.player.y + 'px';
+                
+                // Update gems positions (only visible ones)
+                this.gems.forEach(gem => {
+                    if (gem.element && !gem.collected) {
+                        gem.element.style.left = (gem.x - this.camera.x) + 'px';
+                        gem.element.style.top = gem.y + 'px';
+                    }
+                });
+                
+                // Update obstacles positions
+                this.obstacles.forEach(obstacle => {
+                    if (obstacle.element) {
+                        obstacle.element.style.left = (obstacle.x - this.camera.x) + 'px';
+                        obstacle.element.style.top = obstacle.y + 'px';
+                    }
+                });
+                
+                // Update platforms positions
+                this.platforms.forEach(platform => {
+                    if (platform.element) {
+                        platform.element.style.left = (platform.x - this.camera.x) + 'px';
+                        platform.element.style.top = platform.y + 'px';
+                    }
+                });
+                
+                // Update enemies positions
+                this.enemies.forEach(enemy => {
+                    if (enemy.element) {
+                        enemy.element.style.left = (enemy.x - this.camera.x) + 'px';
+                        enemy.element.style.top = enemy.y + 'px';
+                    }
+                });
+                
+                // Update finish line position
+                if (this.finishLine && this.finishLine.element) {
+                    this.finishLine.element.style.left = (this.finishLine.x - this.camera.x) + 'px';
+                    this.finishLine.element.style.top = this.finishLine.y + 'px';
+                }
+            }
+            
+            updatePlayer() {
+                // Movement using configured speed
+                if (this.keys.left || this.touchControls.left) {
+                    this.player.x -= this.config.movement.speed;
+                    this.player.direction = -1;
+                    this.playerElement.classList.add('running');
+                } else if (this.keys.right || this.touchControls.right) {
+                    this.player.x += this.config.movement.speed;
+                    this.player.direction = 1;
+                    this.playerElement.classList.add('running');
+                } else {
+                    this.playerElement.classList.remove('running');
+                }
+                
+                // Jump using configured force
+                if (this.keys.up && this.player.onGround) {
+                    this.player.velocityY = -this.config.movement.jumpForce;
+                    this.player.onGround = false;
+                    this.playerElement.classList.add('jumping');
+                    this.playSound('jump');
+                }
+                
+                // Apply gravity using configured value
+                this.player.velocityY += this.config.movement.gravity;
+                this.player.y += this.player.velocityY;
+                
+                // Platform collision detection
+                let onPlatform = false;
+                this.platforms.forEach(platform => {
+                    if (this.player.x + this.player.width > platform.x &&
+                        this.player.x < platform.x + platform.width &&
+                        this.player.y + this.player.height > platform.y &&
+                        this.player.y + this.player.height < platform.y + platform.height + 10 &&
+                        this.player.velocityY >= 0) { // Only collide when falling
+                        
+                        this.player.y = platform.y - this.player.height;
+                        this.player.velocityY = 0;
+                        this.player.onGround = true;
+                        onPlatform = true;
+                        if (this.player.isJumping) {
+                            this.player.isJumping = false;
+                            this.playerElement.classList.remove('jumping');
+                        }
+                    }
+                });
+                
+                // Ground collision (only if not on platform)
+                if (!onPlatform && this.player.y >= this.groundLevel - this.player.height) {
+                    this.player.y = this.groundLevel - this.player.height;
+                    this.player.velocityY = 0;
+                    this.player.onGround = true;
+                    if (this.player.isJumping) {
+                        this.player.isJumping = false;
+                        this.playerElement.classList.remove('jumping');
+                    }
+                }
+                
+                // Keep in world bounds (expanded world)
+                this.player.x = Math.max(0, Math.min(this.player.x, this.world.width - this.player.width));
+                
+                // Set facing direction - position will be handled by camera
+                this.playerElement.style.transform = `scaleX(${this.player.direction})`;
+                
+                // Debug log
+                if (this.keys.left || this.keys.right) {
+                    console.log(`Player: ${this.player.x}, Camera: ${this.camera.x}, Screen: ${this.player.x - this.camera.x}`);
+                }
+            }
+            
+            updateEnemies() {
+                this.enemies.forEach(enemy => {
+                    // Simple back and forth movement
+                    const time = Date.now() * 0.002;
+                    enemy.x = enemy.startX + Math.sin(time) * enemy.range;
+                    // Position will be updated by updateElementPositions()
+                });
+            }
+            
+            checkCollisions() {
+                // Check gem collection with improved collision detection
+                this.gems.forEach((gem, index) => {
+                    if (!gem.collected &&
+                        this.player.x < gem.x + 35 &&
+                        this.player.x + this.player.width > gem.x &&
+                        this.player.y < gem.y + 35 &&
+                        this.player.y + this.player.height > gem.y) {
+                        
+                        gem.collected = true;
+                        gem.element.classList.add('collected');
+                        this.gameState.gems++;
+                        
+                        // Sistema per guadagnare vite: 1 vita ogni 100 gemme
+                        if (this.gameState.gems % 100 === 0) {
+                            this.gameState.lives++;
+                            this.showScorePopup(gem.x, gem.y - 30, `🌟 VITA EXTRA! +1 VITA`, '#FFD700');
+                            this.playSound('powerup'); // Suono speciale per la vita extra
+                            
+                            // Aggiorna l'UI delle vite
+                            document.getElementById('lives').textContent = this.gameState.lives;
+                        }
+                        
+                        // Mario-style combo system
+                        const currentTime = Date.now();
+                        if (currentTime - this.lastGemTime < 2000) { // 2 seconds for combo
+                            this.comboCount++;
+                        } else {
+                            this.comboCount = 1; // Reset combo
+                        }
+                        this.lastGemTime = currentTime;
+                        
+                        // Progressive scoring: 100, 200, 400, 800, 1000 (max)
+                        const gemScore = Math.min(100 * Math.pow(2, this.comboCount - 1), 1000);
+                        this.gameState.score += gemScore;
+                        
+                        // Show combo score
+                        if (this.comboCount > 1) {
+                            this.showScorePopup(gem.x, gem.y, `${gemScore} x${this.comboCount}!`);
+                        }
+                        
+                        this.playSound('gem');
+                        
+                        // Remove gem after animation
+                        setTimeout(() => {
+                            gem.element.remove();
+                        }, 600);
+                    }
+                });
+                
+                // Check powerup collection
+                this.powerups.forEach((powerup, index) => {
+                    if (!powerup.collected &&
+                        this.player.x < powerup.x + 35 &&
+                        this.player.x + this.player.width > powerup.x &&
+                        this.player.y < powerup.y + 35 &&
+                        this.player.y + this.player.height > powerup.y) {
+                        
+                        powerup.collected = true;
+                        powerup.element.style.display = 'none';
+                        
+                        if (powerup.type === 'speed') {
+                            // Speed boost gives bonus points instead of actual speed
+                            this.gameState.score += 200; // Extra points for speed powerup
+                            this.showScorePopup(powerup.x, powerup.y, '+200 Speed Bonus!');
+                        } else if (powerup.type === 'jump') {
+                            this.player.velocityY = -20; // Super jump
+                        }
+                        
+                        this.gameState.score += 50;
+                        this.playSound('powerup');
+                    }
+                });
+                
+                // Check obstacle collisions
+                this.obstacles.forEach(obstacle => {
+                    if (this.player.x < obstacle.x + obstacle.width &&
+                        this.player.x + this.player.width > obstacle.x &&
+                        this.player.y < obstacle.y + obstacle.height &&
+                        this.player.y + this.player.height > obstacle.y) {
+                        
+                        this.handlePlayerHit();
+                    }
+                });
+                
+                // Check enemy collisions
+                this.enemies.forEach(enemy => {
+                    if (this.player.x < enemy.x + 35 &&
+                        this.player.x + this.player.width > enemy.x &&
+                        this.player.y < enemy.y + 35 &&
+                        this.player.y + this.player.height > enemy.y) {
+                        
+                        this.handlePlayerHit();
+                    }
+                });
+            }
+            
+            handlePlayerHit() {
+                this.gameState.lives--;
+                this.playSound('hit');
+                
+                // Flash player red
+                this.playerElement.style.filter = 'hue-rotate(120deg)';
+                setTimeout(() => {
+                    this.playerElement.style.filter = '';
+                }, 500);
+                
+                if (this.gameState.lives <= 0) {
+                    this.gameOver();
+                } else {
+                    // Reset player position
+                    this.player.x = 50;
+                    this.player.y = this.groundLevel - this.player.height;
+                    this.player.velocityY = 0;
+                }
+            }
+            
+            checkLevelComplete() {
+                // Check if player reached the finish line
+                if (this.finishLine && 
+                    this.player.x + this.player.width > this.finishLine.x &&
+                    this.player.x < this.finishLine.x + this.finishLine.width &&
+                    this.player.y + this.player.height > this.finishLine.y &&
+                    this.player.y < this.finishLine.y + this.finishLine.height) {
+                    
+                    this.levelComplete();
+                    return;
+                }
+                
+                // Victory condition: Reach the finish line only!
+                // Gems are optional bonus points, not required to win
+            }
+            
+            async levelComplete() {
+                this.gameState.gameRunning = false;
+                this.gameState.showingRecap = true; // Inizia fase recap
+                this.gameState.celebrating = true; // Blocca tutti gli input durante celebrazione
+                
+                // Reset gamepad inputs immediately to prevent button bleeding
+                this.resetGamepadInputs();
+                
+                console.log('🎉 CELEBRATING! All inputs blocked for 3 seconds...');
+                
+                // Calculate comprehensive scoring with multipliers
+                const baseScore = this.gameState.level * 1000; // Base level bonus
+                const totalGems = this.gems.length;
+                const collectedGems = this.gems.filter(gem => gem.collected).length;
+                const gemsBonus = collectedGems * 200; // Increased gem value
+                const gemsPercentage = Math.floor((collectedGems / totalGems) * 100);
+                
+                // Time calculation (completion time in seconds)
+                const completionTime = (Date.now() - this.levelStartTime) / 1000;
+                const timeBonus = Math.max(0, (120 - completionTime) * 25); // Bonus for fast completion
+                
+                // Perfect bonus (all gems collected)
+                const perfectBonus = (collectedGems === totalGems) ? 5000 : 0;
+                
+                // Calculate base total before multipliers
+                const baseTotal = baseScore + gemsBonus + Math.floor(timeBonus) + perfectBonus;
+                
+                // MULTIPLIERS - Applied to base total
+                const livesMultiplier = Math.max(1, this.gameState.lives); // Minimum 1x, more lives = higher multiplier
+                const timeMultiplier = completionTime < 60 ? 2.0 : completionTime < 90 ? 1.5 : 1.0; // Speed multipliers
+                
+                const finalScore = Math.floor(baseTotal * livesMultiplier * timeMultiplier);
+                this.gameState.score += finalScore;
+                
+                // Show detailed scoring breakdown
+                let scoreText = `🏆 Vittoria! Punteggio: ${finalScore}\n`;
+                scoreText += `• Base Livello: ${baseScore}\n`;
+                scoreText += `• Gemme: ${collectedGems}/${totalGems} (+${gemsBonus})\n`;
+                if (timeBonus > 0) scoreText += `• Bonus Tempo: +${Math.floor(timeBonus)}\n`;
+                if (perfectBonus > 0) scoreText += `• 🌟 PERFETTO: +${perfectBonus}\n`;
+                scoreText += `• Subtotale: ${baseTotal}\n`;
+                scoreText += `• 💖 Moltiplicatore Vite: x${livesMultiplier}\n`;
+                scoreText += `• ⚡ Moltiplicatore Tempo: x${timeMultiplier.toFixed(1)}\n`;
+                scoreText += `• 🎯 TOTALE FINALE: ${finalScore}\n`;
+                
+                document.getElementById('gameOverTitle').textContent = '🎉 Livello Completato!';
+                document.getElementById('gameOverText').innerHTML = scoreText.replace(/\n/g, '<br>');
+                document.getElementById('finalScore').textContent = this.gameState.score;
+                document.getElementById('finalGems').textContent = this.gameState.gems;
+                document.getElementById('nextLevelBtn').style.display = 'inline-block';
+                document.getElementById('resetBtn').style.display = 'none'; // Hide reset button on level complete
+                
+                // Start fireworks animation immediately for celebration
+                createFireworks();
+                
+                // Show dialog with extended delay for relaxed experience
+                setTimeout(() => {
+                    document.getElementById('gameOverDialog').style.display = 'block';
+                    document.getElementById('gameOverDialog').classList.add('level-complete-animation');
+                    
+                    // End celebration - allow inputs again and focus on "Next Level" button
+                    setTimeout(() => {
+                        this.gameState.showingRecap = false;
+                        this.gameState.celebrating = false; // Riattiva input dopo celebrazione
+                        document.getElementById('nextLevelBtn').focus();
+                        console.log('🎮 Celebration ended, inputs re-enabled!');
+                    }, 100);
+                }, 3000); // 3 second delay for relaxed child-friendly experience
+                
+                this.playSound('victory');
+            }
+            
+            async gameOver() {
+                this.gameState.gameRunning = false;
+                this.gameState.showingRecap = true; // Inizia fase recap
+                
+                // Reset gamepad inputs to prevent button bleeding
+                this.resetGamepadInputs();
+                
+                // Only add to leaderboard when player has completely lost (no more lives)
+                // This happens when lives reach 0, meaning true game over
+                let gameOverText = 'Non ti arrendere! Riprova questo livello!';
+                
+                if (this.gameState.lives <= 0 && this.gameState.score > 0) {
+                    // True game over - save score to leaderboard
+                    const ranking = await this.addScore(this.gameState.score, this.gameState.level, this.gameState.gems);
+                    if (ranking <= 10) {
+                        gameOverText = `Game Over finale!\n🏆 Punteggio salvato! Posizione #${ranking} nella classifica!`;
+                    } else {
+                        gameOverText = 'Game Over finale! Punteggio salvato nella classifica!';
+                    }
+                }
+                
+                document.getElementById('gameOverTitle').textContent = this.gameState.lives <= 0 ? '� Game Over Finale!' : '😵 Vita Persa!';
+                document.getElementById('gameOverText').innerHTML = gameOverText.replace(/\n/g, '<br>');
+                document.getElementById('finalScore').textContent = this.gameState.score;
+                document.getElementById('finalGems').textContent = this.gameState.gems;
+                document.getElementById('nextLevelBtn').style.display = 'none';
+                document.getElementById('resetBtn').style.display = 'inline-block'; // Show reset button on game over
+                
+                // Show dialog with delay to prevent accidental inputs
+                setTimeout(() => {
+                    document.getElementById('gameOverDialog').style.display = 'block';
+                    
+                    // Reset flag and focus on "Restart Level" button as default for game over
+                    setTimeout(() => {
+                        this.gameState.showingRecap = false;
+                        document.getElementById('resetBtn').focus();
+                    }, 100);
+                }, 1500); // 1.5 second delay
+                
+                this.playSound('gameOver');
+            }
+            
+            nextLevel() {
+                this.gameState.level++;
+                this.gameState.gameRunning = true;
+                this.gameState.lives = Math.min(this.gameState.lives + 1, 3); // Restore one life
+                
+                // Reset gamepad inputs to prevent button bleeding between levels
+                this.resetGamepadInputs();
+                
+                // Reset player position
+                this.player.x = 50;
+                this.player.y = this.groundLevel - this.player.height;
+                this.player.velocityY = 0;
+                this.player.onGround = true;
+                
+                document.getElementById('gameOverDialog').style.display = 'none';
+                document.getElementById('gameOverDialog').classList.remove('level-complete-animation');
+                
+                this.generateLevel();
+                // Don't call gameLoop() here - it's already running
+            }
+            
+            restart() {
+                // Save current level progress
+                const savedLevel = this.gameState.level;
+                const wasCompleteGameOver = this.gameState.lives <= 0;
+                
+                // Reset game state - keep score if just retrying level, reset if complete game over
+                this.gameState = {
+                    level: savedLevel, // Keep current level instead of resetting to 1
+                    score: wasCompleteGameOver ? 0 : this.gameState.score, // Reset score only on complete game over
+                    gems: 0, // Always reset current level gems
+                    lives: 3, // Always restore full lives
+                    gameRunning: true,
+                    showingRecap: false,
+                    celebrating: false
+                };
+                
+                // Reset gamepad inputs to prevent button bleeding when restarting
+                this.resetGamepadInputs();
+                
+                // Reset player
+                this.player.x = 50;
+                this.player.y = this.groundLevel - this.player.height;
+                this.player.velocityY = 0;
+                this.player.onGround = true;
+                this.player.isJumping = false;
+                
+                document.getElementById('gameOverDialog').style.display = 'none';
+                document.getElementById('speedBoost').style.display = 'none';
+                
+                this.generateLevel();
+                this.updateUI();
+                // Don't call gameLoop() here - it's already running
+            }
+            
+            resetSession() {
+                // Complete session reset - back to level 1
+                this.gameState = {
+                    level: 1,
+                    score: 0,
+                    gems: 0,
+                    lives: 3,
+                    gameRunning: true,
+                    showingRecap: false,
+                    celebrating: false
+                };
+                
+                // Reset gamepad inputs to prevent button bleeding when resetting session
+                this.resetGamepadInputs();
+                
+                // Reset player
+                this.player.x = 50;
+                this.player.y = this.groundLevel - this.player.height;
+                this.player.velocityY = 0;
+                this.player.onGround = true;
+                this.player.isJumping = false;
+                
+                // Reset camera
+                this.camera.x = 0;
+                
+                document.getElementById('gameOverDialog').style.display = 'none';
+                document.getElementById('gameOverDialog').classList.remove('level-complete-animation');
+                
+                this.generateLevel();
+                this.updateUI();
+                // Don't call gameLoop() here - it's already running
+            }
+            
+            updateUI() {
+                document.getElementById('gems').textContent = this.gameState.gems;
+                document.getElementById('score').textContent = this.gameState.score;
+                document.getElementById('level').textContent = this.gameState.level;
+                document.getElementById('lives').textContent = this.gameState.lives;
+                
+                // Update world progress
+                const progressPercent = Math.min(100, (this.player.x / this.world.width) * 100);
+                document.getElementById('progress').textContent = Math.floor(progressPercent) + '%';
+                document.getElementById('progressFill').style.width = progressPercent + '%';
+            }
+            
+            showScorePopup(x, y, text, color = '#FFD700') {
+                const popup = document.createElement('div');
+                popup.style.cssText = `
+                    position: absolute;
+                    left: ${x - this.camera.x}px;
+                    top: ${y - 20}px;
+                    color: ${color};
+                    font-weight: bold;
+                    font-size: 16px;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+                    pointer-events: none;
+                    z-index: 100;
+                    animation: scorePopup 1.5s ease-out forwards;
+                `;
+                popup.textContent = text;
+                this.canvas.appendChild(popup);
+                
+                setTimeout(() => popup.remove(), 1500);
+            }
+            
+            playSound(type) {
+                if (!this.audioContext) return; // Skip audio if not available
+                
+                try {
+                    switch (type) {
+                        case 'jump':
+                            // Sonic-like jump sound
+                            this.playTone(this.audioContext, 523, 0.15);
+                            setTimeout(() => this.playTone(this.audioContext, 659, 0.1), 50);
+                            break;
+                        case 'gem':
+                            // Ring collection sound
+                            this.playTone(this.audioContext, 1047, 0.2);
+                            setTimeout(() => this.playTone(this.audioContext, 1319, 0.15), 80);
+                            break;
+                        case 'powerup':
+                            // Power-up sound
+                            this.playTone(this.audioContext, 659, 0.2);
+                            setTimeout(() => this.playTone(this.audioContext, 784, 0.2), 100);
+                            setTimeout(() => this.playTone(this.audioContext, 1047, 0.3), 200);
+                            break;
+                        case 'hit':
+                            // Hit/damage sound
+                            this.playTone(this.audioContext, 200, 0.3);
+                            setTimeout(() => this.playTone(this.audioContext, 150, 0.4), 150);
+                            break;
+                        case 'victory':
+                            // Mario-style level complete fanfare
+                            const victoryMelody = [
+                                {note: 523, duration: 0.2}, // C
+                                {note: 523, duration: 0.2}, // C
+                                {note: 523, duration: 0.2}, // C
+                                {note: 415, duration: 0.4}, // G#
+                                {note: 466, duration: 0.4}, // A#
+                                {note: 523, duration: 0.2}, // C
+                                {note: 466, duration: 0.2}, // A#
+                                {note: 523, duration: 0.6}, // C (long)
+                                {note: 659, duration: 0.4}, // E
+                                {note: 698, duration: 0.4}, // F
+                                {note: 784, duration: 0.4}, // G
+                                {note: 880, duration: 0.4}, // A
+                                {note: 932, duration: 0.4}, // A#
+                                {note: 1047, duration: 0.8} // C (finale)
+                            ];
+                            
+                            let totalDelay = 0;
+                            victoryMelody.forEach((noteData, i) => {
+                                setTimeout(() => {
+                                    this.playTone(this.audioContext, noteData.note, noteData.duration);
+                                }, totalDelay);
+                                totalDelay += noteData.duration * 1000 * 0.8; // Slight overlap
+                            });
+                            break;
+                        case 'gameOver':
+                            // Game over sound
+                            const gameOverNotes = [392, 349, 330, 294];
+                            gameOverNotes.forEach((note, i) => {
+                                setTimeout(() => this.playTone(this.audioContext, note, 0.4), i * 200);
+                            });
+                            break;
+                        case 'spindash':
+                            // Spin dash charging sound
+                            this.playTone(this.audioContext, 100 + Math.random() * 200, 0.1);
+                            break;
+                    }
+                } catch (e) {
+                    // Ignore audio errors
+                }
+            }
+            
+            playTone(audioContext, frequency, duration) {
+                try {
+                    if (!audioContext || audioContext.state === 'closed') return;
+                    
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = 'square';
+                    
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration);
+                } catch (e) {
+                    // Silently ignore audio errors
+                }
+            }
+            
+            // Leaderboard functions
+            loadLeaderboard() {
+                const saved = localStorage.getItem('speedyAdventuresLeaderboard');
+                this.leaderboard = saved ? JSON.parse(saved) : [];
+                this.updateLeaderboardDisplay();
+            }
+            
+            saveLeaderboard() {
+                localStorage.setItem('speedyAdventuresLeaderboard', JSON.stringify(this.leaderboard));
+            }
+            
+            async addScore(score, level, gems) {
+                // Get current user from global user manager
+                let playerName = 'Anonimo';
+                
+                if (window.userManager && window.userManager.isLoggedIn()) {
+                    // Use logged-in user's name
+                    playerName = window.userManager.getCurrentUsername();
+                    
+                    // Update user stats
+                    window.userManager.updateUserStats(1, score);
+                } else {
+                    // Check if this score would make it to top 10
+                    const wouldMakeTop10 = this.leaderboard.length < 10 || 
+                                         score > this.leaderboard[this.leaderboard.length - 1]?.score;
+                    
+                    if (wouldMakeTop10) {
+                        // For gamepad-only experience, automatically suggest login without popup
+                        if (window.userManager) {
+                            const loginResult = await window.userManager.showLoginDialog();
+                            if (loginResult.success) {
+                                playerName = window.userManager.getCurrentUsername();
+                                window.userManager.updateUserStats(1, score);
+                            } else {
+                                // Fallback: prompt for name without confirmation popup
+                                const promptedName = prompt('🎉 Top 10! Inserisci il tuo nome:', '');
+                                if (promptedName && promptedName.trim()) {
+                                    playerName = promptedName.trim().substring(0, 15);
+                                }
+                            }
+                        } else {
+                            // Fallback: prompt for name
+                            const promptedName = prompt('Inserisci il tuo nome per la classifica:', '');
+                            if (promptedName && promptedName.trim()) {
+                                playerName = promptedName.trim().substring(0, 15);
+                            }
+                        }
+                    }
+                }
+                
+                const entry = {
+                    score: score,
+                    level: level,
+                    gems: gems,
+                    name: playerName,
+                    date: new Date().toLocaleDateString()
+                };
+                
+                this.leaderboard.push(entry);
+                this.leaderboard.sort((a, b) => b.score - a.score);
+                this.leaderboard = this.leaderboard.slice(0, 10); // Keep only top 10
+                this.saveLeaderboard();
+                this.updateLeaderboardDisplay();
+                
+                return this.leaderboard.findIndex(entry => entry.score === score && entry.level === level && entry.name === playerName) + 1;
+            }
+            
+            updateLeaderboardDisplay() {
+                const list = document.getElementById('leaderboard-list');
+                if (!list) return;
+                
+                if (this.leaderboard.length === 0) {
+                    list.innerHTML = '<div style="text-align: center; color: #888;">Nessun punteggio ancora</div>';
+                    return;
+                }
+                
+                list.innerHTML = this.leaderboard.map((entry, index) => {
+                    const isCurrentScore = this.gameState.score === entry.score && 
+                                         this.gameState.level === entry.level;
+                    const className = isCurrentScore ? 'leaderboard-entry current-score' : 'leaderboard-entry';
+                    
+                    // Handle legacy entries without names
+                    const playerName = entry.name || 'Anonimo';
+                    
+                    return `
+                        <div class="${className}">
+                            <span class="leaderboard-rank">#${index + 1}</span>
+                            <span class="leaderboard-score">${entry.score.toLocaleString()}</span>
+                        </div>
+                        <div style="font-size: 10px; color: #888; margin-left: 25px;">
+                            👤 ${playerName}
+                        </div>
+                        <div style="font-size: 9px; color: #666; margin-left: 25px;">
+                            Lv.${entry.level} • ${entry.gems}💎 • ${entry.date}
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+        
+        // Function to create fireworks animation
+        function createFireworks() {
+            const container = document.getElementById('fireworksContainer');
+            if (!container) return;
+            
+            // Clear any existing fireworks
+            container.innerHTML = '';
+            
+            // Make container visible
+            container.style.display = 'block';
+            
+            // Create multiple fireworks over 3 seconds
+            const colors = [
+                '#FF6B35', // Arancione brillante
+                '#F7931E', // Arancione dorato
+                '#FFD23F', // Giallo vivace
+                '#FFF700', // Giallo elettrico
+                '#4A90E2', // Blu brillante
+                '#0066CC', // Blu intenso
+                '#00B4D8', // Blu cielo
+                '#32CD32', // Verde lime
+                '#00C851', // Verde brillante
+                '#228B22', // Verde foresta
+                '#FF8C00', // Arancione scuro
+                '#FFB347'  // Arancione pesca
+            ];
+            const totalFireworks = 20;
+            
+            for (let i = 0; i < totalFireworks; i++) {
+                setTimeout(() => {
+                    // Create firework
+                    const firework = document.createElement('div');
+                    firework.className = 'firework';
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    firework.style.background = color;
+                    firework.style.left = (Math.random() * 80 + 10) + '%'; // Keep away from edges
+                    firework.style.top = '100%';
+                    
+                    container.appendChild(firework);
+                    
+                    // Add sparkles around the firework
+                    const sparkleColors = ['#FFD23F', '#FF6B35', '#32CD32', '#4A90E2', '#F7931E', '#00C851'];
+                    for (let j = 0; j < 12; j++) {
+                        setTimeout(() => {
+                            const sparkle = document.createElement('div');
+                            sparkle.className = 'sparkle';
+                            const sparkleColor = sparkleColors[Math.floor(Math.random() * sparkleColors.length)];
+                            sparkle.style.background = sparkleColor;
+                            sparkle.style.color = sparkleColor; // For box-shadow currentColor
+                            sparkle.style.left = (parseFloat(firework.style.left) + (Math.random() - 0.5) * 10) + '%';
+                            sparkle.style.top = (Math.random() * 30 + 20) + '%';
+                            sparkle.style.animationDelay = (Math.random() * 0.5) + 's';
+                            
+                            container.appendChild(sparkle);
+                            
+                            // Remove sparkle after animation
+                            setTimeout(() => {
+                                if (sparkle.parentNode) {
+                                    sparkle.parentNode.removeChild(sparkle);
+                                }
+                            }, 2000);
+                        }, j * 80);
+                    }
+                    
+                    // Remove firework after animation
+                    setTimeout(() => {
+                        if (firework.parentNode) {
+                            firework.parentNode.removeChild(firework);
+                        }
+                    }, 2500);
+                }, i * 150); // Launch fireworks every 150ms
+            }
+            
+            // Clear container after all animations
+            setTimeout(() => {
+                container.innerHTML = '';
+                container.style.display = 'none';
+            }, 6000);
+        }
+        
+        // Initialize game
+        let game = new SpeedyAdventuresGame();
+        
+        // Touch controls for mobile
+        function handleTouch(direction) {
+            // CELEBRAZIONE: Blocca tutti gli input durante i fuochi d'artificio
+            if (game && game.gameState && game.gameState.celebrating) {
+                return;
+            }
+            
+            switch (direction) {
+                case 'left':
+                    game.touchControls.left = true;
+                    break;
+                case 'right':
+                    game.touchControls.right = true;
+                    break;
+                case 'jump':
+                    game.keys.up = true;
+                    break;
+            }
+        }
+        
+        function handleTouchEnd() {
+            // CELEBRAZIONE: Blocca tutti gli input durante i fuochi d'artificio
+            if (game && game.gameState && game.gameState.celebrating) {
+                return;
+            }
+            
+            game.touchControls.left = false;
+            game.touchControls.right = false;
+            game.keys.up = false;
+        }
+        
+        function nextLevel() {
+            // CELEBRAZIONE: Blocca tutti gli input durante i fuochi d'artificio
+            if (game && game.gameState && game.gameState.celebrating) {
+                return;
+            }
+            game.nextLevel();
+        }
+        
+        function restartGame() {
+            // CELEBRAZIONE: Blocca tutti gli input durante i fuochi d'artificio
+            if (game && game.gameState && game.gameState.celebrating) {
+                return;
+            }
+            game.restart();
+        }
+        
+        function resetSession() {
+            // CELEBRAZIONE: Blocca tutti gli input durante i fuochi d'artificio
+            if (game && game.gameState && game.gameState.celebrating) {
+                return;
+            }
+            game.resetSession();
+        }
+        
+        // Configuration functions
+        let bindingMode = null;
+        
+        function openConfig() {
+            // Pause the game if it's running
+            const wasRunning = game.gameState.gameRunning;
+            if (wasRunning) {
+                game.gameState.gameRunning = false;
+            }
+            
+            game.updateConfigUI();
+            document.getElementById('configMenu').style.display = 'block';
+            setupConfigListeners();
+            
+            // Store the previous state
+            window.gameWasRunning = wasRunning;
+        }
+        
+        function closeConfig() {
+            document.getElementById('configMenu').style.display = 'none';
+            bindingMode = null;
+            
+            // Resume the game if it was running before opening config
+            if (window.gameWasRunning) {
+                game.gameState.gameRunning = true;
+            }
+        }
+        
+        function saveConfig() {
+            // Get values from sliders
+            game.config.movement.speed = parseInt(document.getElementById('speedSlider').value);
+            game.config.movement.jumpForce = parseInt(document.getElementById('jumpSlider').value);
+            game.config.movement.gravity = parseFloat(document.getElementById('gravitySlider').value);
+            game.config.gamepad.deadzone = parseFloat(document.getElementById('deadzoneSlider').value);
+            
+            game.saveConfig();
+            closeConfig();
+            // Configuration saved silently for gamepad-only experience
+        }
+        
+        function resetConfig() {
+            game.config = {
+                movement: {
+                    speed: 5,
+                    jumpForce: 18,
+                    gravity: 0.8
+                },
+                gamepad: {
+                    jumpButton: 0, // X button
+                    menuButton: 9, // Options button
+                    deadzone: 0.2
+                }
+            };
+            game.updateConfigUI();
+            game.saveConfig();
+        }
+        
+        function bindButton(action) {
+            if (!game.gamepad.connected) {
+                // Silently ignore if gamepad not connected - better UX
+                return;
+            }
+            
+            bindingMode = action;
+            const button = document.getElementById(action === 'jump' ? 'jumpBinding' : 'menuBinding');
+            button.classList.add('listening');
+            button.textContent = 'Premi un pulsante... (10s)';
+            
+            // Clear any existing timeout
+            if (window.bindingTimeout) {
+                clearTimeout(window.bindingTimeout);
+            }
+            
+            // Set timeout to exit binding mode after 15 seconds (increased)
+            window.bindingTimeout = setTimeout(() => {
+                if (bindingMode === action) {
+                    button.classList.remove('listening');
+                    game.updateButtonLabels();
+                    bindingMode = null;
+                    // Silently timeout for better gamepad experience
+                }
+            }, 15000);
+            
+            // Wait longer to avoid immediate detection of currently pressed buttons
+            setTimeout(() => {
+                let lastPressedButtons = new Set();
+                
+                // First scan to record currently pressed buttons
+                const gamepads = navigator.getGamepads();
+                const gamepad = gamepads[game.gamepad.index];
+                if (gamepad) {
+                    for (let i = 0; i < gamepad.buttons.length; i++) {
+                        if (gamepad.buttons[i].pressed) {
+                            lastPressedButtons.add(i);
+                        }
+                    }
+                }
+                
+                button.textContent = 'Rilascia tutti i pulsanti...';
+                
+                // Wait for all buttons to be released
+                const waitForRelease = () => {
+                    if (bindingMode !== action) return;
+                    
+                    const gamepads = navigator.getGamepads();
+                    const gamepad = gamepads[game.gamepad.index];
+                    
+                    if (gamepad) {
+                        let anyPressed = false;
+                        for (let i = 0; i < gamepad.buttons.length; i++) {
+                            if (gamepad.buttons[i].pressed) {
+                                anyPressed = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!anyPressed) {
+                            // All buttons released, now listen for new press
+                            button.textContent = 'Ora premi il pulsante desiderato...';
+                            startListening();
+                        } else {
+                            requestAnimationFrame(waitForRelease);
+                        }
+                    } else {
+                        requestAnimationFrame(waitForRelease);
+                    }
+                };
+                
+                // Start listening for gamepad input
+                const startListening = () => {
+                    const checkBinding = () => {
+                        if (bindingMode !== action) return;
+                        
+                        const gamepads = navigator.getGamepads();
+                        const gamepad = gamepads[game.gamepad.index];
+                        
+                        if (gamepad) {
+                            for (let i = 0; i < gamepad.buttons.length; i++) {
+                                if (gamepad.buttons[i].pressed && !lastPressedButtons.has(i)) {
+                                    // Found new pressed button
+                                    if (action === 'jump') {
+                                        game.config.gamepad.jumpButton = i;
+                                    } else {
+                                        game.config.gamepad.menuButton = i;
+                                    }
+                                    
+                                    button.classList.remove('listening');
+                                    game.updateButtonLabels();
+                                    game.saveConfig(); // Save configuration immediately
+                                    bindingMode = null;
+                                    
+                                    // Clear timeout
+                                    if (window.bindingTimeout) {
+                                        clearTimeout(window.bindingTimeout);
+                                    }
+                                    
+                                    // Show success message
+                                    setTimeout(() => {
+                                        const buttonNames = {
+                                            0: '❌ (X)', 1: '⭕ (Circle)', 2: '🔺 (Triangle)', 3: '🔲 (Square)',
+                                            4: 'L1', 5: 'R1', 6: 'L2', 7: 'R2',
+                                            8: 'Share', 9: 'Options', 10: 'L3', 11: 'R3',
+                                            12: 'D-Up', 13: 'D-Down', 14: 'D-Left', 15: 'D-Right',
+                                            16: 'PS Button'
+                                        };
+                                        
+                                        const buttonName = buttonNames[i] || `Button ${i}`;
+                                        // Button configured silently for better gamepad experience
+                                    }, 100);
+                                    
+                                    return;
+                                }
+                            }
+                        }
+                        
+                        requestAnimationFrame(checkBinding);
+                    };
+                    
+                    requestAnimationFrame(checkBinding);
+                };
+                
+                requestAnimationFrame(waitForRelease);
+            }, 200); // Reduced initial wait
+        }
+        
+        function cancelBinding() {
+            if (bindingMode) {
+                const button = document.getElementById(bindingMode === 'jump' ? 'jumpBinding' : 'menuBinding');
+                button.classList.remove('listening');
+                game.updateButtonLabels();
+                bindingMode = null;
+                
+                // Clear timeout
+                if (window.bindingTimeout) {
+                    clearTimeout(window.bindingTimeout);
+                }
+            }
+        }
+        
+        function setupConfigListeners() {
+            // Slider listeners
+            ['speed', 'jump', 'gravity', 'deadzone'].forEach(type => {
+                const slider = document.getElementById(type + 'Slider');
+                const value = document.getElementById(type + 'Value');
+                
+                slider.oninput = () => {
+                    value.textContent = slider.value;
+                };
+            });
+        }
+        
+        // Prevent scrolling on mobile
+        document.addEventListener('touchmove', (e) => {
+            if (e.target.closest('.game-canvas')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Initialize user system when ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user manager is loaded
+            if (typeof window.userManager !== 'undefined') {
+                window.userManager.initializeForPage();
+                console.log('✅ Sistema utenti caricato correttamente');
+            } else {
+                console.warn('⚠️ Sistema utenti non disponibile');
+                // Fallback functions
+                window.loginUser = () => {
+                    const username = prompt('🎮 Inserisci il tuo nome utente:', '');
+                    if (username) {
+                        // User logged in silently (fallback mode)
+                    }
+                };
+                window.logoutUser = () => {
+                    // User logged out silently (fallback mode)
+                };
+            }
+        });
+    </script>
+</body>
+</html>

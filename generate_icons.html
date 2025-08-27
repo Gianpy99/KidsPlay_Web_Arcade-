@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <canvas id="canvas192" width="192" height="192" style="border: 1px solid #ccc; margin: 10px;"></canvas>
+    <canvas id="canvas512" width="512" height="512" style="border: 1px solid #ccc; margin: 10px;"></canvas>
+    
+    <script>
+        // Generate 192x192 icon
+        function generateIcon192() {
+            const canvas = document.getElementById('canvas192');
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 192, 192);
+            gradient.addColorStop(0, '#4CAF50');
+            gradient.addColorStop(1, '#2E7D32');
+            
+            // Background with rounded corners
+            ctx.fillStyle = gradient;
+            ctx.roundRect(0, 0, 192, 192, 24);
+            ctx.fill();
+            
+            // Controller body
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.roundRect(56, 76, 80, 30, 15);
+            ctx.fill();
+            
+            // D-pad
+            ctx.fillStyle = '#2E7D32';
+            ctx.roundRect(66, 86, 12, 4, 2);
+            ctx.fill();
+            ctx.roundRect(70, 82, 4, 12, 2);
+            ctx.fill();
+            
+            // Buttons
+            ctx.beginPath();
+            ctx.arc(116, 88, 4, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(126, 94, 4, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Text
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('PLAY', 96, 121);
+        }
+        
+        // Generate 512x512 icon
+        function generateIcon512() {
+            const canvas = document.getElementById('canvas512');
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+            gradient.addColorStop(0, '#4CAF50');
+            gradient.addColorStop(1, '#2E7D32');
+            
+            // Background with rounded corners
+            ctx.fillStyle = gradient;
+            ctx.roundRect(0, 0, 512, 512, 64);
+            ctx.fill();
+            
+            // Controller body
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.roundRect(136, 196, 240, 90, 45);
+            ctx.fill();
+            
+            // D-pad
+            ctx.fillStyle = '#2E7D32';
+            ctx.roundRect(166, 226, 36, 12, 6);
+            ctx.fill();
+            ctx.roundRect(178, 214, 12, 36, 6);
+            ctx.fill();
+            
+            // Buttons
+            ctx.beginPath();
+            ctx.arc(316, 232, 12, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(346, 250, 12, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.fillStyle = '#4CAF50';
+            ctx.beginPath();
+            ctx.arc(316, 268, 12, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(286, 250, 12, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Analog sticks
+            ctx.fillStyle = 'rgba(46, 125, 50, 0.7)';
+            ctx.beginPath();
+            ctx.arc(211, 281, 18, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(301, 281, 18, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Text
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 42px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('KidsPlay', 256, 336);
+            
+            ctx.font = '24px Arial';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillText('Giochi Educativi', 256, 366);
+        }
+        
+        // Polyfill for roundRect if not available
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+                if (w < 2 * r) r = w / 2;
+                if (h < 2 * r) r = h / 2;
+                this.beginPath();
+                this.moveTo(x + r, y);
+                this.arcTo(x + w, y, x + w, y + h, r);
+                this.arcTo(x + w, y + h, x, y + h, r);
+                this.arcTo(x, y + h, x, y, r);
+                this.arcTo(x, y, x + w, y, r);
+                this.closePath();
+            };
+        }
+        
+        // Generate icons when page loads
+        window.onload = function() {
+            generateIcon192();
+            generateIcon512();
+            
+            // Download links
+            setTimeout(() => {
+                const canvas192 = document.getElementById('canvas192');
+                const canvas512 = document.getElementById('canvas512');
+                
+                // Create download links
+                const link192 = document.createElement('a');
+                link192.download = 'icon-192.png';
+                link192.href = canvas192.toDataURL('image/png');
+                link192.textContent = 'Download 192x192 Icon';
+                link192.style.display = 'block';
+                link192.style.margin = '10px';
+                
+                const link512 = document.createElement('a');
+                link512.download = 'icon-512.png';
+                link512.href = canvas512.toDataURL('image/png');
+                link512.textContent = 'Download 512x512 Icon';
+                link512.style.display = 'block';
+                link512.style.margin = '10px';
+                
+                document.body.appendChild(link192);
+                document.body.appendChild(link512);
+                
+                console.log('Icons generated! You can right-click on each canvas and save as PNG, or use the download links.');
+            }, 100);
+        };
+    </script>
+</body>
+</html>

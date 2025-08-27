@@ -1,0 +1,90 @@
+{
+    "version": "2.0",
+    "last_updated": "2025-08-27",
+    "games": [
+        {
+            "id": "memory-letters",
+            "title": "Memory Lettere",
+            "description": "Trova le coppie di lettere uguali!",
+            "category": "educational",
+            "icon": "🔤",
+            "min_age": 4,
+            "max_age": 7,
+            "skills": ["memoria", "riconoscimento lettere"],
+            "difficulty_levels": ["easy", "normal"],
+            "estimated_time": "5-10 min"
+        },
+        {
+            "id": "letter-hunt",
+            "title": "Caccia alle Lettere",
+            "description": "Trova tutte le lettere nascoste!",
+            "category": "educational", 
+            "icon": "🔍",
+            "min_age": 5,
+            "max_age": 8,
+            "skills": ["alfabeto", "osservazione"],
+            "difficulty_levels": ["easy", "normal", "hard"],
+            "estimated_time": "3-8 min"
+        },
+        {
+            "id": "math-easy",
+            "title": "Matematica Facile",
+            "description": "Somme e sottrazioni fino a 10",
+            "category": "educational",
+            "icon": "🔢",
+            "min_age": 5,
+            "max_age": 7,
+            "skills": ["matematica", "logica"],
+            "difficulty_levels": ["very_easy", "easy", "normal"],
+            "estimated_time": "5-15 min"
+        },
+        {
+            "id": "snake",
+            "title": "Snake Educativo",
+            "description": "Il serpente che insegna le direzioni!",
+            "category": "educational",
+            "icon": "🐍",
+            "min_age": 5,
+            "max_age": 10,
+            "skills": ["coordinazione", "pianificazione"],
+            "difficulty_levels": ["easy", "normal"],
+            "estimated_time": "3-10 min"
+        },
+        {
+            "id": "blockworld",
+            "title": "BlockWorld",
+            "description": "Costruisci il tuo mondo a blocchi!",
+            "category": "adventure",
+            "icon": "🧱",
+            "min_age": 6,
+            "max_age": 10,
+            "skills": ["creatività", "pianificazione spaziale"],
+            "difficulty_levels": ["easy", "normal"],
+            "estimated_time": "10-30 min"
+        },
+        {
+            "id": "speedy-adventures",
+            "title": "Speedy Adventures",
+            "description": "Corri veloce e raccogli le gemme!",
+            "category": "adventure",
+            "icon": "💨",
+            "min_age": 5,
+            "max_age": 9,
+            "skills": ["coordinazione", "riflessi"],
+            "difficulty_levels": ["easy", "normal"],
+            "estimated_time": "5-15 min"
+        },
+        {
+            "id": "dino-explorer",
+            "title": "Dino Explorer",
+            "description": "Esplora il mondo dei dinosauri!",
+            "category": "adventure",
+            "icon": "🦕",
+            "min_age": 5,
+            "max_age": 8,
+            "skills": ["esplorazione", "apprendimento"],
+            "difficulty_levels": ["easy", "normal"],
+            "estimated_time": "10-20 min"
+        }
+    ]
+}

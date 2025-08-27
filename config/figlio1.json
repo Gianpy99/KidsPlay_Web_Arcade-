@@ -1,0 +1,29 @@
+{
+    "profile_name": "figlio1",
+    "display_name": "Primo Figlio",
+    "age": 5,
+    "difficulty_level": "easy",
+    "speed_multiplier": 0.8,
+    "audio_enabled": true,
+    "language": "it",
+    "enabled_games": [
+        "memory-letters",
+        "letter-hunt", 
+        "math-easy",
+        "snake",
+        "blockworld",
+        "speedy-adventures",
+        "dino-explorer"
+    ],
+    "gamepad_enabled": true,
+    "parental_controls": {
+        "max_session_time": 30,
+        "break_reminders": true,
+        "volume_limit": 0.7
+    },
+    "ui_preferences": {
+        "large_buttons": true,
+        "high_contrast": false,
+        "animations": true
+    }
+}

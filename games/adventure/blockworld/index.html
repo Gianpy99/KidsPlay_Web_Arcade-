@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlockWorld - KidsPlay</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            font-family: 'Comic Sans MS', cursive;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .game-header {
+            color: white;
+            text-align: center;
+            margin: 10px 0;
+            z-index: 100;
+        }
+        
+        .game-header h1 {
+            font-size: 2rem;
+            margin: 5px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .controls-info {
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 500px;
+            border: 3px solid #2c3e50;
+            border-radius: 10px;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 70%, #8B4513 100%);
+        }
+        
+        .world-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            grid-template-rows: repeat(15, 1fr);
+        }
+        
+        .block {
+            border: 1px solid rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .block:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            border: 2px solid #FFD700;
+        }
+        
+        .block.grass {
+            background: linear-gradient(45deg, #32CD32, #228B22);
+        }
+        
+        .block.dirt {
+            background: linear-gradient(45deg, #8B4513, #A0522D);
+        }
+        
+        .block.stone {
+            background: linear-gradient(45deg, #696969, #808080);
+        }
+        
+        .block.wood {
+            background: linear-gradient(45deg, #DEB887, #D2691E);
+        }
+        
+        .block.water {
+            background: linear-gradient(45deg, #4169E1, #1E90FF);
+            animation: water-flow 2s ease-in-out infinite;
+        }
+        
+        .block.air {
+            background: transparent;
+        }
+        
+        .block.player {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+            animation: player-bounce 1s ease-in-out infinite;
+        }
+        
+        .block.tree {
+            background: linear-gradient(45deg, #228B22, #32CD32);
+        }
+        
+        .block.flower {
+            background: linear-gradient(45deg, #FFB6C1, #FF69B4);
+        }
+        
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .tool-button {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .tool-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .tool-button.active {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #2c3e50;
+        }
+        
+        .block-selector {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        
+        .block-type {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #2c3e50;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+        
+        .block-type.selected {
+            border-color: #FFD700;
+            border-width: 3px;
+            transform: scale(1.1);
+        }
+        
+        .game-stats {
+            display: flex;
+            gap: 15px;
+            color: white;
+            font-size: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .stat-item {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .back-button:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .creation-mode {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 10px;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        
+        .mode-button {
+            background: #FF9800;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-left: 5px;
+            font-family: inherit;
+        }
+        
+        .achievement {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            color: #2c3e50;
+        }
+        
+        .save-load {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .save-button, .load-button, .clear-button {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        .save-button:hover, .load-button:hover, .clear-button:hover {
+            background: #8e44ad;
+            transform: translateY(-1px);
+        }
+        
+        @keyframes water-flow {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(10deg); }
+        }
+        
+        @keyframes player-bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes block-place {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .block.placing {
+            animation: block-place 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .game-container {
+                height: 400px;
+            }
+            
+            .world-grid {
+                grid-template-columns: repeat(16, 1fr);
+                grid-template-rows: repeat(12, 1fr);
+            }
+            
+            .block {
+                font-size: 1rem;
+            }
+            
+            .toolbar {
+                padding: 5px;
+                gap: 5px;
+            }
+            
+            .tool-button {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .game-header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../../../index.html" class="back-button">
+        ← Torna ai Giochi
+    </a>
+    
+    <div class="game-header">
+        <h1>🧱 BlockWorld Adventures</h1>
+        <div class="controls-info">
+            <p><strong>Costruisci il tuo mondo!</strong> Clicca per piazzare blocchi, usa gli strumenti per creare!</p>
+        </div>
+    </div>
+    
+    <div class="creation-mode">
+        <span>Modalità: <strong id="currentMode">Costruzione</strong></span>
+        <button class="mode-button" onclick="toggleMode()" id="modeToggle">🏃 Esplora</button>
+    </div>
+    
+    <div class="toolbar">
+        <div class="tool-button active" onclick="selectTool('build')" id="buildTool">
+            🔨 Costruisci
+        </div>
+        <div class="tool-button" onclick="selectTool('destroy')" id="destroyTool">
+            ⛏️ Distruggi
+        </div>
+        <div class="tool-button" onclick="selectTool('paint')" id="paintTool">
+            🎨 Colora
+        </div>
+        
+        <div class="block-selector">
+            <span>Blocco:</span>
+            <div class="block-type selected" data-type="grass" onclick="selectBlock('grass')" title="Erba">🌱</div>
+            <div class="block-type" data-type="dirt" onclick="selectBlock('dirt')" title="Terra">🟫</div>
+            <div class="block-type" data-type="stone" onclick="selectBlock('stone')" title="Pietra">🗿</div>
+            <div class="block-type" data-type="wood" onclick="selectBlock('wood')" title="Legno">🪵</div>
+            <div class="block-type" data-type="water" onclick="selectBlock('water')" title="Acqua">💧</div>
+            <div class="block-type" data-type="tree" onclick="selectBlock('tree')" title="Albero">🌳</div>
+            <div class="block-type" data-type="flower" onclick="selectBlock('flower')" title="Fiore">🌸</div>
+        </div>
+    </div>
+    
+    <div class="game-container">
+        <div class="world-grid" id="worldGrid">
+            <!-- Grid will be generated by JavaScript -->
+        </div>
+    </div>
+    
+    <div class="game-stats">
+        <div class="stat-item">
+            🧱 Blocchi: <span id="blocksPlaced">0</span>
+        </div>
+        <div class="stat-item">
+            🏗️ Costruzioni: <span id="structures">0</span>
+        </div>
+        <div class="stat-item">
+            ⭐ Punti: <span id="score">0</span>
+        </div>
+        <div class="stat-item">
+            ⏰ Tempo: <span id="playTime">00:00</span>
+        </div>
+    </div>
+    
+    <div class="save-load">
+        <button class="save-button" onclick="saveWorld()">💾 Salva Mondo</button>
+        <button class="load-button" onclick="loadWorld()">📁 Carica Mondo</button>
+        <button class="clear-button" onclick="clearWorld()">🗑️ Nuovo Mondo</button>
+    </div>
+    
+    <div class="achievement" id="achievementDialog">
+        <h3 id="achievementTitle">🏆 Obiettivo Raggiunto!</h3>
+        <p id="achievementText">Hai sbloccato un nuovo traguardo!</p>
+        <button class="tool-button" onclick="closeAchievement()">Fantastico! 🎉</button>
+    </div>
+
+    <script>
+        class BlockWorldGame {
+            constructor() {
+                this.gridWidth = window.innerWidth <= 768 ? 16 : 20;
+                this.gridHeight = window.innerWidth <= 768 ? 12 : 15;
+                this.world = [];
+                this.currentTool = 'build';
+                this.selectedBlock = 'grass';
+                this.mode = 'build'; // 'build' or 'explore'
+                this.playerPosition = { x: 10, y: 10 };
+                this.blocksPlaced = 0;
+                this.structures = 0;
+                this.score = 0;
+                this.startTime = Date.now();
+                this.achievements = [];
+                
+                this.blockTypes = {
+                    air: { emoji: '', solid: false, color: 'transparent' },
+                    grass: { emoji: '🌱', solid: true, color: '#32CD32' },
+                    dirt: { emoji: '🟫', solid: true, color: '#8B4513' },
+                    stone: { emoji: '🗿', solid: true, color: '#696969' },
+                    wood: { emoji: '🪵', solid: true, color: '#DEB887' },
+                    water: { emoji: '💧', solid: false, color: '#4169E1' },
+                    tree: { emoji: '🌳', solid: true, color: '#228B22' },
+                    flower: { emoji: '🌸', solid: true, color: '#FFB6C1' },
+                    player: { emoji: '😊', solid: false, color: '#FF6B6B' }
+                };
+                
+                this.init();
+            }
+            
+            init() {
+                this.initializeWorld();
+                this.generateTerrain();
+                this.renderWorld();
+                this.startTimer();
+                this.updateStats();
+                this.loadSavedWorld();
+            }
+            
+            initializeWorld() {
+                this.world = [];
+                for (let y = 0; y < this.gridHeight; y++) {
+                    this.world[y] = [];
+                    for (let x = 0; x < this.gridWidth; x++) {
+                        this.world[y][x] = 'air';
+                    }
+                }
+            }
+            
+            generateTerrain() {
+                // Generate ground level
+                const groundLevel = Math.floor(this.gridHeight * 0.7);
+                
+                for (let x = 0; x < this.gridWidth; x++) {
+                    // Create varying ground height
+                    const height = groundLevel + Math.floor(Math.sin(x * 0.5) * 2);
+                    
+                    for (let y = height; y < this.gridHeight; y++) {
+                        if (y === height) {
+                            this.world[y][x] = 'grass';
+                        } else if (y < height + 3) {
+                            this.world[y][x] = 'dirt';
+                        } else {
+                            this.world[y][x] = 'stone';
+                        }
+                    }
+                    
+                    // Add some trees
+                    if (Math.random() < 0.1 && height > 0) {
+                        this.world[height - 1][x] = 'tree';
+                    }
+                    
+                    // Add some flowers
+                    if (Math.random() < 0.05 && height > 0) {
+                        this.world[height - 1][x] = 'flower';
+                    }
+                }
+                
+                // Add some water patches
+                for (let i = 0; i < 3; i++) {
+                    const waterX = Math.floor(Math.random() * this.gridWidth);
+                    const waterY = groundLevel + 1;
+                    if (waterY < this.gridHeight) {
+                        this.world[waterY][waterX] = 'water';
+                    }
+                }
+                
+                // Place player
+                this.world[this.playerPosition.y][this.playerPosition.x] = 'player';
+            }
+            
+            renderWorld() {
+                const grid = document.getElementById('worldGrid');
+                grid.innerHTML = '';
+                grid.style.gridTemplateColumns = `repeat(${this.gridWidth}, 1fr)`;
+                grid.style.gridTemplateRows = `repeat(${this.gridHeight}, 1fr)`;
+                
+                for (let y = 0; y < this.gridHeight; y++) {
+                    for (let x = 0; x < this.gridWidth; x++) {
+                        const block = document.createElement('div');
+                        block.className = `block ${this.world[y][x]}`;
+                        block.dataset.x = x;
+                        block.dataset.y = y;
+                        block.textContent = this.blockTypes[this.world[y][x]].emoji;
+                        
+                        block.addEventListener('click', () => this.handleBlockClick(x, y));
+                        grid.appendChild(block);
+                    }
+                }
+            }
+            
+            handleBlockClick(x, y) {
+                if (this.mode === 'explore') {
+                    this.movePlayer(x, y);
+                    return;
+                }
+                
+                switch (this.currentTool) {
+                    case 'build':
+                        this.placeBlock(x, y);
+                        break;
+                    case 'destroy':
+                        this.destroyBlock(x, y);
+                        break;
+                    case 'paint':
+                        this.paintBlock(x, y);
+                        break;
+                }
+                
+                this.renderWorld();
+                this.updateStats();
+                this.checkAchievements();
+                this.playSound('place');
+            }
+            
+            placeBlock(x, y) {
+                if (this.world[y][x] === 'air' || this.world[y][x] === 'player') {
+                    if (this.world[y][x] === 'player') {
+                        // Move player if placing block on player
+                        this.findNewPlayerPosition();
+                    }
+                    
+                    this.world[y][x] = this.selectedBlock;
+                    this.blocksPlaced++;
+                    this.score += 10;
+                    
+                    // Add placing animation
+                    setTimeout(() => {
+                        const blockElement = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+                        if (blockElement) {
+                            blockElement.classList.add('placing');
+                        }
+                    }, 50);
+                }
+            }
+            
+            destroyBlock(x, y) {
+                if (this.world[y][x] !== 'air' && this.world[y][x] !== 'player') {
+                    this.world[y][x] = 'air';
+                    this.score += 5;
+                }
+            }
+            
+            paintBlock(x, y) {
+                if (this.world[y][x] !== 'air' && this.world[y][x] !== 'player') {
+                    this.world[y][x] = this.selectedBlock;
+                    this.score += 3;
+                }
+            }
+            
+            movePlayer(x, y) {
+                // Remove player from current position
+                this.world[this.playerPosition.y][this.playerPosition.x] = 'air';
+                
+                // Check if target position is accessible
+                if (this.world[y][x] === 'air' || !this.blockTypes[this.world[y][x]].solid) {
+                    this.playerPosition = { x, y };
+                    this.world[y][x] = 'player';
+                } else {
+                    // Find nearest accessible position
+                    this.findNewPlayerPosition();
+                }
+                
+                this.renderWorld();
+            }
+            
+            findNewPlayerPosition() {
+                // Find a nearby air block for player
+                for (let radius = 1; radius < 5; radius++) {
+                    for (let dx = -radius; dx <= radius; dx++) {
+                        for (let dy = -radius; dy <= radius; dy++) {
+                            const newX = this.playerPosition.x + dx;
+                            const newY = this.playerPosition.y + dy;
+                            
+                            if (newX >= 0 && newX < this.gridWidth && 
+                                newY >= 0 && newY < this.gridHeight &&
+                                this.world[newY][newX] === 'air') {
+                                this.playerPosition = { x: newX, y: newY };
+                                this.world[newY][newX] = 'player';
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            selectTool(tool) {
+                this.currentTool = tool;
+                
+                // Update tool buttons
+                document.querySelectorAll('.tool-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById(tool + 'Tool').classList.add('active');
+            }
+            
+            selectBlock(blockType) {
+                this.selectedBlock = blockType;
+                
+                // Update block selector
+                document.querySelectorAll('.block-type').forEach(block => {
+                    block.classList.remove('selected');
+                });
+                document.querySelector(`[data-type="${blockType}"]`).classList.add('selected');
+            }
+            
+            toggleMode() {
+                this.mode = this.mode === 'build' ? 'explore' : 'build';
+                
+                const modeText = document.getElementById('currentMode');
+                const modeButton = document.getElementById('modeToggle');
+                
+                if (this.mode === 'build') {
+                    modeText.textContent = 'Costruzione';
+                    modeButton.textContent = '🏃 Esplora';
+                } else {
+                    modeText.textContent = 'Esplorazione';
+                    modeButton.textContent = '🔨 Costruisci';
+                }
+            }
+            
+            updateStats() {
+                document.getElementById('blocksPlaced').textContent = this.blocksPlaced;
+                document.getElementById('structures').textContent = this.structures;
+                document.getElementById('score').textContent = this.score;
+                
+                // Count structures (connected blocks)
+                this.structures = this.countStructures();
+                document.getElementById('structures').textContent = this.structures;
+            }
+            
+            countStructures() {
+                const visited = new Set();
+                let structureCount = 0;
+                
+                for (let y = 0; y < this.gridHeight; y++) {
+                    for (let x = 0; x < this.gridWidth; x++) {
+                        const key = `${x},${y}`;
+                        if (!visited.has(key) && this.blockTypes[this.world[y][x]].solid) {
+                            const size = this.floodFill(x, y, visited);
+                            if (size > 2) { // Only count as structure if 3+ blocks
+                                structureCount++;
+                            }
+                        }
+                    }
+                }
+                
+                return structureCount;
+            }
+            
+            floodFill(startX, startY, visited) {
+                const stack = [{ x: startX, y: startY }];
+                let size = 0;
+                
+                while (stack.length > 0) {
+                    const { x, y } = stack.pop();
+                    const key = `${x},${y}`;
+                    
+                    if (visited.has(key) || x < 0 || x >= this.gridWidth || 
+                        y < 0 || y >= this.gridHeight || 
+                        !this.blockTypes[this.world[y][x]].solid) {
+                        continue;
+                    }
+                    
+                    visited.add(key);
+                    size++;
+                    
+                    // Add neighbors
+                    stack.push({ x: x + 1, y });
+                    stack.push({ x: x - 1, y });
+                    stack.push({ x, y: y + 1 });
+                    stack.push({ x, y: y - 1 });
+                }
+                
+                return size;
+            }
+            
+            checkAchievements() {
+                if (this.blocksPlaced >= 10 && !this.achievements.includes('builder')) {
+                    this.unlockAchievement('builder', 'Primo Costruttore!', 'Hai piazzato 10 blocchi!');
+                }
+                
+                if (this.blocksPlaced >= 50 && !this.achievements.includes('architect')) {
+                    this.unlockAchievement('architect', 'Architetto Esperto!', 'Hai piazzato 50 blocchi!');
+                }
+                
+                if (this.structures >= 3 && !this.achievements.includes('city_planner')) {
+                    this.unlockAchievement('city_planner', 'Pianificatore Urbano!', 'Hai costruito 3 strutture!');
+                }
+                
+                if (this.score >= 500 && !this.achievements.includes('master_builder')) {
+                    this.unlockAchievement('master_builder', 'Maestro Costruttore!', 'Hai raggiunto 500 punti!');
+                }
+            }
+            
+            unlockAchievement(id, title, description) {
+                this.achievements.push(id);
+                document.getElementById('achievementTitle').textContent = title;
+                document.getElementById('achievementText').textContent = description;
+                document.getElementById('achievementDialog').style.display = 'block';
+                this.playSound('achievement');
+            }
+            
+            saveWorld() {
+                const worldData = {
+                    world: this.world,
+                    playerPosition: this.playerPosition,
+                    blocksPlaced: this.blocksPlaced,
+                    structures: this.structures,
+                    score: this.score,
+                    achievements: this.achievements
+                };
+                
+                localStorage.setItem('blockworld_save', JSON.stringify(worldData));
+                this.showNotification('Mondo salvato! 💾');
+            }
+            
+            loadWorld() {
+                const savedData = localStorage.getItem('blockworld_save');
+                if (savedData) {
+                    const worldData = JSON.parse(savedData);
+                    this.world = worldData.world;
+                    this.playerPosition = worldData.playerPosition;
+                    this.blocksPlaced = worldData.blocksPlaced || 0;
+                    this.structures = worldData.structures || 0;
+                    this.score = worldData.score || 0;
+                    this.achievements = worldData.achievements || [];
+                    
+                    this.renderWorld();
+                    this.updateStats();
+                    this.showNotification('Mondo caricato! 📁');
+                } else {
+                    this.showNotification('Nessun mondo salvato trovato! ❌');
+                }
+            }
+            
+            loadSavedWorld() {
+                // Auto-load if exists
+                const savedData = localStorage.getItem('blockworld_save');
+                if (savedData) {
+                    // Don't auto-load, let user choose
+                }
+            }
+            
+            clearWorld() {
+                if (confirm('Sei sicuro di voler cancellare tutto e creare un nuovo mondo?')) {
+                    this.blocksPlaced = 0;
+                    this.structures = 0;
+                    this.score = 0;
+                    this.achievements = [];
+                    this.playerPosition = { x: 10, y: 10 };
+                    this.initializeWorld();
+                    this.generateTerrain();
+                    this.renderWorld();
+                    this.updateStats();
+                    this.showNotification('Nuovo mondo creato! 🌍');
+                }
+            }
+            
+            showNotification(message) {
+                // Simple notification system
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: rgba(0,0,0,0.8);
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    z-index: 1000;
+                    font-family: inherit;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => notification.remove(), 3000);
+            }
+            
+            startTimer() {
+                setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    document.getElementById('playTime').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
+            }
+            
+            playSound(type) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    switch (type) {
+                        case 'place':
+                            this.playTone(audioContext, 400, 0.2);
+                            break;
+                        case 'achievement':
+                            const notes = [523, 659, 784, 1047];
+                            notes.forEach((note, i) => {
+                                setTimeout(() => this.playTone(audioContext, note, 0.3), i * 150);
+                            });
+                            break;
+                    }
+                } catch (e) {
+                    // Ignore audio errors
+                }
+            }
+            
+            playTone(audioContext, frequency, duration) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'square';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            }
+        }
+        
+        // Initialize game
+        let game = new BlockWorldGame();
+        
+        function selectTool(tool) {
+            game.selectTool(tool);
+        }
+        
+        function selectBlock(blockType) {
+            game.selectBlock(blockType);
+        }
+        
+        function toggleMode() {
+            game.toggleMode();
+        }
+        
+        function saveWorld() {
+            game.saveWorld();
+        }
+        
+        function loadWorld() {
+            game.loadWorld();
+        }
+        
+        function clearWorld() {
+            game.clearWorld();
+        }
+        
+        function closeAchievement() {
+            document.getElementById('achievementDialog').style.display = 'none';
+        }
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case '1': selectTool('build'); break;
+                case '2': selectTool('destroy'); break;
+                case '3': selectTool('paint'); break;
+                case 'm': case 'M': toggleMode(); break;
+                case 's': case 'S': if (e.ctrlKey) { e.preventDefault(); saveWorld(); } break;
+                case 'l': case 'L': if (e.ctrlKey) { e.preventDefault(); loadWorld(); } break;
+            }
+        });
+    </script>
+</body>
+</html>
