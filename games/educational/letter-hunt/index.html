@@ -35,6 +35,23 @@
             border-radius: 10px;
             margin-bottom: 20px;
             text-align: center;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .instructions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .instruction-item {
+            background: rgba(255,255,255,0.8);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
         }
         
         .target-letter {
@@ -242,9 +259,161 @@
             0%, 100% { box-shadow: 0 0 5px rgba(255,215,0,0.5); }
             50% { box-shadow: 0 0 20px rgba(255,215,0,0.8); }
         }
+
+        /* Mission card and progress bar */
+        .mission-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            padding: 10px 16px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .mission-icon { font-size: 1.6rem; }
+        .mission-text { font-weight: 700; color: #2c3e50; }
+
+        .progress-wrap { width: 100%; max-width: 800px; margin: 8px auto 16px; }
+        .progress-bar {
+            height: 10px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 999px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.12);
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4ECDC4, #FFD166);
+            transition: width 0.3s ease;
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            left: 0; top: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 3000;
+        }
         
-        .letter.hint {
-            animation: hint-glow 1s ease infinite;
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        }
+        
+        .memory-phase {
+            background: rgba(0,0,0,0.7);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            text-align: center;
+            z-index: 50;
+        }
+
+        .memory-countdown {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #FFD700;
+            margin: 20px;
+            animation: pulse 1s infinite;
+        }
+
+        .multi-target {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .target-letter.multi {
+            font-size: 2rem;
+            padding: 10px 20px;
+            transform: scale(0.9);
+        }
+
+        .target-letter.found {
+            opacity: 0.5;
+            transform: scale(0.8);
+        }
+
+        .bonus-challenge {
+            background: linear-gradient(45deg, #9C27B0, #E91E63);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .time-pressure {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #FF5722;
+        }
+
+        .stars-collected {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .star {
+            font-size: 1.5rem;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        .encouragement {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95);
+            padding: 20px 30px;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #FF5722;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+            animation: bounce 0.6s ease;
+        }
+
+        .progress-feedback {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            display: none;
+            z-index: 50;
         }
         
         @media (max-width: 768px) {
@@ -277,22 +446,67 @@
     <div class="game-header">
         <h1>🔍 Caccia alle Lettere</h1>
         <div class="controls-info">
-            <p><strong>Missione:</strong> Trova tutte le lettere nascoste nella scena!</p>
-            <p>Cerca la lettera evidenziata qui sotto:</p>
+            <p><strong>🎯 Come giocare:</strong> Trova tutte le lettere nascoste nella scena!</p>
+            <p><strong>⭐ Sistema delle Stelle:</strong> Completa le sfide bonus per guadagnare stelle!</p>
+
+            <div class="instructions-grid">
+                <div class="instruction-item">
+                    <strong>🎵 Vocali:</strong><br>
+                    A, E, I, O, U<br>
+                    <small>Le lettere che cantiamo!</small>
+                </div>
+                <div class="instruction-item">
+                    <strong>🌈 Colori:</strong><br>
+                    R, O, Y, G, B, P<br>
+                    <small>Lettere dei colori dell'arcobaleno!</small>
+                </div>
+                <div class="instruction-item">
+                    <strong>🐾 Animali:</strong><br>
+                    C, D, F, H, L, M, P, S, T, W<br>
+                    <small>Iniziali degli animali!</small>
+                </div>
+            </div>
         </div>
     </div>
     
-    <div class="target-letter" id="targetLetter">A</div>
+    <div class="mission-card" id="missionCard" aria-live="polite">
+        <span class="mission-icon">📝</span>
+        <span class="mission-text" id="missionText">Trova la lettera mostrata!</span>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="false">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+    </div>
+
+    <div class="target-letter" id="targetLetter" aria-live="polite">A</div>
+
+    <div class="multi-target" id="multiTargetContainer" style="display: none;"></div>
+
+    <div class="bonus-challenge" id="bonusChallenge" style="display: none;">
+        <div id="bonusText">🎯 Sfida Bonus: Trova tutte le vocali!</div>
+    </div>
+
+    <div class="encouragement" id="encouragement" style="display: none;">
+        <div id="encouragementText">🎉 Bravo! Continua così!</div>
+    </div>
+
+    <div class="progress-feedback" id="progressFeedback" style="display: none;">
+        <div id="progressText">Ottimo lavoro! 🎯</div>
+    </div>
     
     <div class="game-scene" id="gameScene">
         <!-- Scene elements will be generated by JavaScript -->
     </div>
     
     <button class="hint-button" onclick="showHint()" id="hintButton">💡 Aiuto</button>
+    <button class="hint-button" onclick="toggleAudio()" id="audioToggleButton" aria-pressed="true">🔊 Audio: ON</button>
     
     <div class="game-info">
         <div class="info-item">
             🎯 Livello: <span id="level">1</span>
+        </div>
+        <div class="info-item">
+            🎮 Modalità: <span id="gameMode">Classica</span>
         </div>
         <div class="info-item">
             ✅ Trovate: <span id="found">0</span>/<span id="total">5</span>
@@ -303,12 +517,18 @@
         <div class="info-item">
             💡 Aiuti: <span id="hints">3</span>
         </div>
+        <div class="info-item">
+            ⭐ Stelle: <span id="stars">0</span>
+        </div>
     </div>
     
     <div class="level-complete" id="levelCompleteDialog">
         <h2>🎉 Livello Completato! 🎉</h2>
         <p>Hai trovato tutte le lettere!</p>
         <p>Tempo: <span id="completionTime">00:00</span></p>
+        <div class="stars-collected" id="levelStars">
+            <!-- Stars will be displayed here -->
+        </div>
         <button class="next-button" onclick="nextLevel()">Livello Successivo! 🚀</button>
         <button class="restart-button" onclick="restartGame()">Ricomincia 🔄</button>
     </div>
@@ -324,8 +544,37 @@
                 this.startTime = Date.now();
                 this.gameActive = true;
                 this.difficulty = this.getDifficulty();
+                // Audio/voice settings from URL (e.g., ?language=it&audio=on)
+                this.params = new URLSearchParams(window.location.search);
+                const langParam = this.params.get('language') || 'it-IT';
+                this.language = langParam.length === 2 ? `${langParam}-IT` : langParam;
+                const audioParam = (this.params.get('audio') || '').toLowerCase();
+                this.audioEnabled = ['on', 'true', '1', 'yes', 'si', 'sì'].includes(audioParam);
+                this.synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined;
+                // Fallback to stored preference if audio param not present
+                try {
+                    const audioParamRaw = this.params.get('audio');
+                    const storedAudio = localStorage.getItem('letterHuntAudioEnabled');
+                    if ((!audioParamRaw || audioParamRaw.length === 0) && storedAudio) {
+                        this.audioEnabled = storedAudio === 'on';
+                    }
+                } catch (_) {}
                 this.allLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                
+
+                // New challenge modes for 5-year-olds
+                this.gameMode = this.getGameMode();
+                this.memoryPhase = false;
+                this.memoryCountdown = 3;
+                this.multiTargetMode = false;
+                this.timePressureMode = false;
+                this.letterCategories = {
+                    vowels: ['A', 'E', 'I', 'O', 'U'],
+                    colors: ['R', 'O', 'Y', 'G', 'B', 'P'], // Red, Orange, Yellow, Green, Blue, Purple
+                    animals: ['C', 'D', 'F', 'H', 'L', 'M', 'P', 'S', 'T', 'W'] // Cat, Dog, Fox, Horse, Lion, Monkey, Pig, Snake, Tiger, Wolf
+                };
+                this.starsCollected = 0;
+                this.currentCategory = null;
+
                 this.scenes = {
                     1: { theme: 'giardino', decorations: ['🌳', '🌸', '🦋', '🌞', '☁️'] },
                     2: { theme: 'fattoria', decorations: ['🐄', '🐷', '🐔', '🌾', '🏠'] },
@@ -333,7 +582,7 @@
                     4: { theme: 'foresta', decorations: ['🦉', '🦌', '🍄', '🌲', '🦊'] },
                     5: { theme: 'spazio', decorations: ['🚀', '🌟', '🛸', '🌕', '👽'] }
                 };
-                
+
                 this.init();
             }
             
@@ -341,17 +590,28 @@
                 const params = new URLSearchParams(window.location.search);
                 return params.get('difficulty') || 'easy';
             }
+
+            getGameMode() {
+                // Determine game mode based on level for progressive challenge
+                if (this.currentLevel <= 1) return 'classic';
+                if (this.currentLevel <= 4) return 'multi-target'; // Extended multi-target for clarity
+                if (this.currentLevel <= 6) return 'memory'; // Memory starts later
+                if (this.currentLevel <= 8) return 'time-pressure';
+                return 'multi-target'; // Default to multi-target for higher levels
+            }
             
             init() {
                 this.setupLevel();
                 this.startTimer();
                 this.setupControls();
+                this.updateAudioToggleUI();
             }
             
             setupLevel() {
                 this.foundLetters = 0;
-                
-                // Adjust difficulty
+                this.gameMode = this.getGameMode();
+
+                // Adjust difficulty and game mode features
                 switch(this.difficulty) {
                     case 'easy':
                         this.totalLetters = 4;
@@ -366,35 +626,371 @@
                         this.hintsRemaining = 1;
                         break;
                 }
-                
+
+                // Configure game mode features
+                this.configureGameMode();
+
                 this.generateTargetLetters();
                 this.createScene();
-                this.updateUI();
+
+                // Start memory phase if needed
+                if (this.gameMode === 'memory' || this.gameMode === 'time-pressure') {
+                    this.startMemoryPhase();
+                } else {
+                    this.showLevelInstructions();
+                    this.updateUI();
+                }
+            }
+
+            configureGameMode() {
+                // Reset mode flags
+                this.memoryPhase = false;
+                this.multiTargetMode = false;
+                this.timePressureMode = false;
+
+                switch(this.gameMode) {
+                    case 'memory':
+                        this.memoryPhase = true;
+                        this.memoryCountdown = 3;
+                        break;
+                    case 'multi-target':
+                        this.multiTargetMode = true;
+                        this.totalLetters = Math.min(this.totalLetters, 3); // Max 3 simultaneous targets
+                        break;
+                    case 'time-pressure':
+                        this.timePressureMode = true;
+                        this.memoryPhase = true;
+                        this.memoryCountdown = 2; // Shorter time for higher difficulty
+                        break;
+                }
+
+                // Add bonus challenges for higher levels
+                if (this.currentLevel >= 3) {
+                    this.addBonusChallenge();
+                }
+            }
+
+            addBonusChallenge() {
+                const categories = Object.keys(this.letterCategories);
+                this.currentCategory = categories[Math.floor(Math.random() * categories.length)];
+                const categoryLetters = this.letterCategories[this.currentCategory];
+
+                // Create detailed explanation based on category
+                let explanation = '';
+                switch(this.currentCategory) {
+                    case 'vowels':
+                        explanation = ' (A, E, I, O, U - le lettere che cantiamo!)';
+                        break;
+                    case 'colors':
+                        explanation = ' (R, O, Y, G, B, P - lettere dei colori dell\'arcobaleno!)';
+                        break;
+                    case 'animals':
+                        explanation = ' (C, D, F, H, L, M, P, S, T, W - iniziali degli animali!)';
+                        break;
+                }
+
+                // Safely update bonus text - try multiple times if DOM not ready
+                const tryUpdateBonus = (attempts = 0) => {
+                    const bonusChallengeElement = document.getElementById('bonusChallenge');
+                    let bonusTextElement = document.getElementById('bonusText');
+
+                    if (bonusChallengeElement) {
+                        // Recreate the inner text element if missing (could have been replaced after completion)
+                        if (!bonusTextElement) {
+                            bonusChallengeElement.innerHTML = '<div id="bonusText"></div>';
+                            bonusTextElement = document.getElementById('bonusText');
+                        }
+
+                        if (bonusTextElement) {
+                            bonusTextElement.textContent =
+                                `🎯 Sfida Bonus: Trova tutte le ${this.getCategoryName(this.currentCategory)}${explanation} (+⭐ stella)`;
+                            bonusChallengeElement.style.display = 'block';
+                            return; // success
+                        }
+                    }
+
+                    if (attempts < 3) {
+                        // Retry after a short delay if elements not ready
+                        setTimeout(() => tryUpdateBonus(attempts + 1), 100);
+                    } else {
+                        console.warn('Bonus challenge elements not found in DOM after multiple attempts');
+                    }
+                };
+
+                tryUpdateBonus();
+            }
+
+            getCategoryName(category) {
+                const names = {
+                    vowels: 'vocali',
+                    colors: 'lettere dei colori',
+                    animals: 'lettere degli animali'
+                };
+                return names[category] || category;
             }
             
+            startMemoryPhase() {
+                const gameScene = document.getElementById('gameScene');
+                const memoryOverlay = document.createElement('div');
+                memoryOverlay.className = 'memory-phase';
+                memoryOverlay.id = 'memoryOverlay';
+
+                memoryOverlay.innerHTML = `
+                    <div>👀 Memorizza le posizioni!</div>
+                    <div class="memory-countdown" id="memoryCountdown">${this.memoryCountdown}</div>
+                `;
+
+                gameScene.appendChild(memoryOverlay);
+
+                let countdown = this.memoryCountdown;
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+                    const countdownElement = document.getElementById('memoryCountdown');
+                    if (countdownElement) {
+                        countdownElement.textContent = countdown;
+                    }
+
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+                        this.endMemoryPhase();
+                    }
+                }, 1000);
+            }
+
+            endMemoryPhase() {
+                const memoryOverlay = document.getElementById('memoryOverlay');
+                if (memoryOverlay) {
+                    memoryOverlay.remove();
+                }
+
+                // In memory mode, hide the target letters completely
+                const letters = document.querySelectorAll('.letter');
+                letters.forEach(letter => {
+                    if (!letter.dataset.distractor && this.targetLetters.includes(letter.dataset.letter)) {
+                        letter.style.opacity = '0.3'; // Make them very faint as hints
+                        letter.style.pointerEvents = 'auto'; // But still clickable
+                    }
+                });
+
+                // Show clear instructions for memory phase
+                setTimeout(() => {
+                    this.showMessage(`🧠 MODALITÀ MEMORIA - PASSO 2/2!<br><small>Ricorda dove erano le lettere e clicca negli spazi giusti!<br>Le lettere sono leggermente visibili come aiuto</small>`, 4000);
+                    this.updateUI();
+                }, 500);
+            }
+
+            showLevelInstructions() {
+                if (this.currentCategory) {
+                    // Show category explanation
+                    let message = '';
+                    switch(this.currentCategory) {
+                        case 'vowels':
+                            message = `🎵 Trova le VOCALI: A, E, I, O, U<br><small>Le lettere che cantiamo nelle canzoni!</small>`;
+                            break;
+                        case 'colors':
+                            message = `🌈 Trova le lettere dei COLORI: R, O, Y, G, B, P<br><small>Le iniziali dei colori dell'arcobaleno!</small>`;
+                            break;
+                        case 'animals':
+                            message = `🐾 Trova le lettere degli ANIMALI:<br>C, D, F, H, L, M, P, S, T, W<br><small>Le iniziali dei tuoi animali preferiti!</small>`;
+                            break;
+                    }
+
+                    this.showMessage(message, 3000);
+                } else if (this.multiTargetMode) {
+                    this.showMessage(`🎯 MODALITÀ MULTI-TARGET!<br><small>Puoi cliccare le lettere in QUALSIASI ordine!<br>Tutte le lettere sono mostrate sopra</small>`, 3500);
+                } else if (this.memoryPhase) {
+                    this.showMessage(`🧠 MODALITÀ MEMORIA - PASSO 1/2!<br><small>Guarda bene le lettere... tra pochi secondi spariranno!</small>`, 3000);
+                } else if (this.timePressureMode) {
+                    this.showMessage(`⏰ MODALITÀ TIME-PRESSURE!<br><small>Cerca velocemente prima che finisca il tempo!</small>`, 3000);
+                } else {
+                    // Regular single-target mode
+                    this.showMessage(`🎯 MODALITÀ CLASSICA!<br><small>Clicca la lettera mostrata sopra, una alla volta!</small>`, 2500);
+                }
+            }
+
+            showMessage(message, duration = 2000) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'level-instruction';
+                messageDiv.innerHTML = message;
+                messageDiv.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(255,255,255,0.95);
+                    padding: 20px 30px;
+                    border-radius: 20px;
+                    text-align: center;
+                    font-size: 1.4rem;
+                    font-weight: bold;
+                    color: #2c3e50;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+                    z-index: 2000;
+                    animation: fadeInOut 0.5s ease-in-out;
+                `;
+
+                document.body.appendChild(messageDiv);
+
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, duration);
+            }
+
+            startTimePressure() {
+                const timeElement = document.createElement('div');
+                timeElement.className = 'time-pressure';
+                timeElement.id = 'timePressure';
+                timeElement.textContent = '⏰ 10';
+
+                document.getElementById('gameScene').appendChild(timeElement);
+
+                let timeLeft = 10;
+                const timer = setInterval(() => {
+                    timeLeft--;
+                    timeElement.textContent = `⏰ ${timeLeft}`;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        timeElement.remove();
+                        this.timePressureFail();
+                    }
+                }, 1000);
+
+                this.timePressureTimer = timer;
+            }
+
+            timePressureFail() {
+                // Show all remaining letters briefly as hint
+                const letters = document.querySelectorAll('.letter:not(.target-found)');
+                letters.forEach(letter => {
+                    if (!letter.dataset.distractor) {
+                        letter.classList.add('hint');
+                        setTimeout(() => letter.classList.remove('hint'), 2000);
+                    }
+                });
+            }
+
             generateTargetLetters() {
                 this.targetLetters = [];
-                const availableLetters = this.allLetters.slice(0, Math.min(10 + this.currentLevel, 20));
-                
-                for (let i = 0; i < this.totalLetters; i++) {
-                    let letter;
-                    do {
-                        letter = availableLetters[Math.floor(Math.random() * availableLetters.length)];
-                    } while (this.targetLetters.includes(letter));
-                    
-                    this.targetLetters.push(letter);
+
+                if (this.currentCategory && this.currentLevel >= 3) {
+                    // Use category letters for bonus challenge
+                    const categoryLetters = this.letterCategories[this.currentCategory];
+
+                    // Adjust total letters if category has fewer letters than required
+                    const availableLetters = categoryLetters.length;
+                    const neededLetters = Math.min(this.totalLetters, availableLetters);
+
+                    // If we need fewer letters than the category has, randomly select
+                    if (neededLetters < availableLetters) {
+                        const shuffled = [...categoryLetters].sort(() => Math.random() - 0.5);
+                        this.targetLetters = shuffled.slice(0, neededLetters);
+                    } else {
+                        // Use all available letters from the category
+                        this.targetLetters = [...categoryLetters].sort(() => Math.random() - 0.5);
+                    }
+
+                    // Update total letters to match what we're actually using
+                    this.totalLetters = this.targetLetters.length;
+                } else {
+                    // Generate letters based on game mode and level
+                    let availableLetters;
+
+                    if (this.currentLevel <= 3) {
+                        // Early levels: simple, common letters
+                        availableLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, 13); // A-M
+                    } else if (this.currentLevel <= 6) {
+                        // Mid levels: more letters
+                        availableLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, 20); // A-T
+                    } else {
+                        // High levels: all letters
+                        availableLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    }
+
+                    // For multi-target mode, ensure variety
+                    if (this.multiTargetMode) {
+                        // Select letters that are visually distinct or thematically related
+                        const letterGroups = [
+                            'AEIOU', // Vowels
+                            'BCDFGHJKLMNPQRSTVWXYZ', // Consonants
+                            'RSTLMN', // Common consonants
+                            'BCDFG', // Beginning sounds
+                        ];
+
+                        const selectedGroup = letterGroups[Math.floor(Math.random() * letterGroups.length)];
+                        availableLetters = selectedGroup;
+                    }
+
+                    for (let i = 0; i < this.totalLetters; i++) {
+                        let letter;
+                        let attempts = 0;
+                        do {
+                            letter = availableLetters[Math.floor(Math.random() * availableLetters.length)];
+                            attempts++;
+                            // Prevent too many identical letters in multi-target mode
+                            if (this.multiTargetMode && attempts > 10) {
+                                break; // Allow some repetition if needed
+                            }
+                        } while (this.targetLetters.includes(letter) && attempts < 20);
+
+                        this.targetLetters.push(letter);
+                    }
                 }
-                
+
+                // Shuffle for more challenge in multi-target mode
+                if (this.multiTargetMode) {
+                    this.targetLetters = this.targetLetters.sort(() => Math.random() - 0.5);
+                }
+
                 this.currentTargetIndex = 0;
                 this.updateTargetLetter();
             }
             
             updateTargetLetter() {
-                const targetElement = document.getElementById('targetLetter');
-                if (this.currentTargetIndex < this.targetLetters.length) {
-                    targetElement.textContent = this.targetLetters[this.currentTargetIndex];
+                if (this.multiTargetMode) {
+                    this.updateMultiTargetDisplay();
                 } else {
-                    targetElement.textContent = '🎉';
+                    const targetElement = document.getElementById('targetLetter');
+                    if (this.currentTargetIndex < this.targetLetters.length) {
+                        targetElement.textContent = this.targetLetters[this.currentTargetIndex];
+                        targetElement.classList.remove('found');
+                        if (this.targetLetters[this.currentTargetIndex]) {
+                            this.speak(`Cerca la lettera ${this.targetLetters[this.currentTargetIndex]}`);
+                        }
+                        this.updateMissionCard();
+                    } else {
+                        targetElement.textContent = '🎉';
+                        targetElement.classList.remove('found');
+                    }
+                }
+            }
+
+            updateMultiTargetDisplay() {
+                const container = document.getElementById('multiTargetContainer');
+                const singleTarget = document.getElementById('targetLetter');
+
+                if (this.multiTargetMode) {
+                    singleTarget.style.display = 'none';
+                    container.style.display = 'flex';
+
+                    container.innerHTML = '';
+                    this.targetLetters.forEach((letter, index) => {
+                        const letterElement = document.createElement('div');
+                        letterElement.className = 'target-letter multi';
+                        letterElement.textContent = letter;
+                        letterElement.dataset.index = index;
+
+                        // Check if this letter has been found by looking for the actual letter element
+                        const foundLetterElement = document.querySelector(`.letter[data-letter="${letter}"].target-found`);
+                        if (foundLetterElement) {
+                            letterElement.classList.add('found');
+                        }
+
+                        container.appendChild(letterElement);
+                    });
+                } else {
+                    singleTarget.style.display = 'block';
+                    container.style.display = 'none';
                 }
             }
             
@@ -510,32 +1106,139 @@
             
             checkLetter(letterElement) {
                 if (!this.gameActive) return;
-                
+
                 const clickedLetter = letterElement.dataset.letter;
+
+                if (this.multiTargetMode) {
+                    this.checkMultiTargetLetter(clickedLetter, letterElement);
+                } else {
+                    this.checkSingleTargetLetter(clickedLetter, letterElement);
+                }
+            }
+
+            checkSingleTargetLetter(clickedLetter, letterElement) {
                 const currentTarget = this.targetLetters[this.currentTargetIndex];
-                
+
                 if (clickedLetter === currentTarget) {
                     // Correct letter found!
                     letterElement.classList.add('target-found');
                     this.foundLetters++;
                     this.currentTargetIndex++;
-                    
+
                     this.playSound('success');
+                    this.checkBonusChallenge(clickedLetter);
                     this.updateTargetLetter();
                     this.updateUI();
-                    
+
                     // Check if level complete
                     if (this.foundLetters >= this.totalLetters) {
                         setTimeout(() => this.levelComplete(), 500);
                     }
+
+                    // Additional safety check for single target mode
+                    if (this.currentTargetIndex >= this.targetLetters.length && this.foundLetters >= this.totalLetters) {
+                        setTimeout(() => this.levelComplete(), 500);
+                    }
                 } else {
-                    // Wrong letter
+                    // Wrong letter - show helpful message
                     letterElement.classList.add('wrong-letter');
                     this.playSound('error');
-                    
+
+                    // Show hint about correct order for single-target mode
+                    if (!this.multiTargetMode && !this.currentCategory) {
+                        this.showMessage(`🎯 Clicca prima la lettera: <strong>${currentTarget}</strong><br><small>Devi seguire l'ordine mostrato sopra!</small>`, 2000);
+                    }
+
                     setTimeout(() => {
                         letterElement.classList.remove('wrong-letter');
                     }, 500);
+                }
+            }
+
+            checkMultiTargetLetter(clickedLetter, letterElement) {
+                const targetIndex = this.targetLetters.indexOf(clickedLetter);
+
+                if (targetIndex !== -1 && !letterElement.classList.contains('target-found')) {
+                    // Correct letter found!
+                    letterElement.classList.add('target-found');
+                    this.foundLetters++;
+
+                    // Mark this letter as found in the target display
+                    const multiTargets = document.querySelectorAll('#multiTargetContainer .target-letter');
+                    if (multiTargets[targetIndex]) {
+                        multiTargets[targetIndex].classList.add('found');
+                    }
+
+                    this.playSound('success');
+                    this.checkBonusChallenge(clickedLetter);
+                    this.updateTargetLetter();
+                    this.updateUI();
+
+                    // Check if level complete - all letters found
+                    if (this.foundLetters >= this.totalLetters) {
+                        setTimeout(() => this.levelComplete(), 500);
+                    }
+
+                    // Additional safety check: verify all target letters are found
+                    const allTargetsFound = this.targetLetters.every(letter =>
+                        document.querySelector(`.letter[data-letter="${letter}"].target-found`)
+                    );
+                    if (allTargetsFound && this.foundLetters >= this.totalLetters) {
+                        setTimeout(() => this.levelComplete(), 500);
+                    }
+                } else {
+                    // Wrong letter or already found
+                    letterElement.classList.add('wrong-letter');
+                    this.playSound('error');
+
+                    setTimeout(() => {
+                        letterElement.classList.remove('wrong-letter');
+                    }, 500);
+                }
+            }
+
+            checkBonusChallenge(foundLetter) {
+                if (!this.currentCategory) return;
+
+                const categoryLetters = this.letterCategories[this.currentCategory];
+                if (categoryLetters.includes(foundLetter)) {
+                    // Check if all category letters are found
+                    const foundCategoryLetters = this.targetLetters.slice(0, this.currentTargetIndex + 1)
+                        .filter(letter => categoryLetters.includes(letter));
+
+                    const totalCategoryLetters = this.targetLetters.filter(letter =>
+                        categoryLetters.includes(letter)).length;
+
+                    if (foundCategoryLetters.length === totalCategoryLetters) {
+                        // Bonus challenge completed!
+                        this.starsCollected++;
+                        this.playSound('victory');
+
+                        let completionMessage = '';
+                        switch(this.currentCategory) {
+                            case 'vowels':
+                                completionMessage = '🎉 Tutte le vocali trovate! Sei un campione! ⭐';
+                                break;
+                            case 'colors':
+                                completionMessage = '🌈 Tutti i colori trovati! Arcobaleno completato! ⭐';
+                                break;
+                            case 'animals':
+                                completionMessage = '🐾 Tutti gli animali trovati! Zoo completato! ⭐';
+                                break;
+                        }
+
+                        // Safely update bonus challenge element
+                        const bonusChallengeElement = document.getElementById('bonusChallenge');
+                        if (bonusChallengeElement) {
+                            bonusChallengeElement.innerHTML = `<div>${completionMessage}</div>`;
+
+                            setTimeout(() => {
+                                if (bonusChallengeElement) {
+                                    bonusChallengeElement.style.display = 'none';
+                                }
+                            }, 4000);
+                        }
+                    }
                 }
             }
             
@@ -558,32 +1261,163 @@
                 }
                 
                 if (this.hintsRemaining <= 0) {
-                    document.getElementById('hintButton').disabled = true;
-                    document.getElementById('hintButton').style.opacity = '0.5';
+                    const hintButton = document.getElementById('hintButton');
+                    if (hintButton) {
+                        hintButton.disabled = true;
+                        hintButton.style.opacity = '0.5';
+                    }
                 }
             }
             
             levelComplete() {
                 this.gameActive = false;
+
+                // Clear any active timers
+                if (this.timePressureTimer) {
+                    clearInterval(this.timePressureTimer);
+                    this.timePressureTimer = null;
+                }
+
                 const completionTime = this.formatTime(Math.floor((Date.now() - this.startTime) / 1000));
-                document.getElementById('completionTime').textContent = completionTime;
-                document.getElementById('levelCompleteDialog').style.display = 'block';
+                const completionTimeElement = document.getElementById('completionTime');
+                if (completionTimeElement) {
+                    completionTimeElement.textContent = completionTime;
+                }
+
+                // Update stars display
+                this.updateStarsDisplay();
+
+                const levelCompleteDialog = document.getElementById('levelCompleteDialog');
+                if (levelCompleteDialog) {
+                    levelCompleteDialog.style.display = 'block';
+                }
                 this.playSound('victory');
+                this.launchConfetti();
             }
             
             nextLevel() {
+                console.log(`🔄 Passaggio al livello ${this.currentLevel + 1}`);
+
                 this.currentLevel++;
                 this.gameActive = true;
                 this.startTime = Date.now();
-                document.getElementById('levelCompleteDialog').style.display = 'none';
+
+                // Reset mode-specific variables
+                this.memoryPhase = false;
+                this.multiTargetMode = false;
+                this.timePressureMode = false;
+                this.currentCategory = null;
+
+                // Clear any active timers
+                if (this.timePressureTimer) {
+                    clearInterval(this.timePressureTimer);
+                    this.timePressureTimer = null;
+                }
+
+                // Hide bonus challenge
+                const bonusChallenge = document.getElementById('bonusChallenge');
+                if (bonusChallenge) {
+                    bonusChallenge.style.display = 'none';
+                    // Reset inner container for new round
+                    const existingText = document.getElementById('bonusText');
+                    if (!existingText) {
+                        bonusChallenge.innerHTML = '<div id="bonusText"></div>';
+                    }
+                }
+
+                // Remove time pressure element if exists
+                const timePressure = document.getElementById('timePressure');
+                if (timePressure) {
+                    timePressure.remove();
+                }
+
+                // Hide level complete dialog
+                const levelCompleteDialog = document.getElementById('levelCompleteDialog');
+                if (levelCompleteDialog) levelCompleteDialog.style.display = 'none';
+
+                console.log('🔄 Chiamo setupLevel()...');
                 this.setupLevel();
+                console.log('✅ Nuovo livello configurato!');
             }
             
             updateUI() {
-                document.getElementById('level').textContent = this.currentLevel;
-                document.getElementById('found').textContent = this.foundLetters;
-                document.getElementById('total').textContent = this.totalLetters;
-                document.getElementById('hints').textContent = this.hintsRemaining;
+                // Update elements with safety checks
+                const levelElement = document.getElementById('level');
+                if (levelElement) levelElement.textContent = this.currentLevel;
+
+                // Update game mode indicator
+                const modeElement = document.getElementById('gameMode');
+                if (modeElement) {
+                    modeElement.textContent = this.getCurrentModeName();
+                }
+
+                const foundElement = document.getElementById('found');
+                if (foundElement) foundElement.textContent = this.foundLetters;
+
+                const totalElement = document.getElementById('total');
+                if (totalElement) totalElement.textContent = this.totalLetters;
+
+                const hintsElement = document.getElementById('hints');
+                if (hintsElement) hintsElement.textContent = this.hintsRemaining;
+
+                const starsElement = document.getElementById('stars');
+                if (starsElement) starsElement.textContent = this.starsCollected;
+
+                // Update stars display
+                this.updateStarsDisplay();
+                const progress = this.totalLetters > 0 ? Math.min(100, Math.round((this.foundLetters / this.totalLetters) * 100)) : 0;
+                const fill = document.getElementById('progressFill');
+                if (fill) fill.style.width = `${progress}%`;
+            }
+
+            updateMissionCard() {
+                const mission = document.getElementById('missionText');
+                if (!mission) return;
+
+                if (this.multiTargetMode) {
+                    mission.textContent = `Trova queste lettere: ${this.targetLetters.join(', ')}`;
+                } else if (this.currentCategory) {
+                    const current = this.targetLetters[this.currentTargetIndex] || '';
+                    mission.textContent = `Categoria ${this.getCategoryName(this.currentCategory)} — cerca: ${current}`;
+                } else {
+                    const current = this.targetLetters[this.currentTargetIndex] || '';
+                    mission.textContent = current ? `Cerca la lettera: ${current}` : 'Ottimo! Livello completato!';
+                }
+            }
+
+            getCurrentModeName() {
+                if (this.currentCategory) {
+                    switch(this.currentCategory) {
+                        case 'vowels': return '🎵 Vocali';
+                        case 'colors': return '🌈 Colori';
+                        case 'animals': return '🐾 Animali';
+                        default: return 'Sfida';
+                    }
+                } else if (this.multiTargetMode) {
+                    return '🎯 Multi';
+                } else if (this.memoryPhase) {
+                    return '🧠 Memoria';
+                } else if (this.timePressureMode) {
+                    return '⏰ Pressione';
+                } else {
+                    return '🎮 Classica';
+                }
+            }
+
+            updateStarsDisplay() {
+                const starsContainer = document.getElementById('levelStars');
+                if (!starsContainer) return;
+
+                starsContainer.innerHTML = '';
+                for (let i = 0; i < Math.max(this.starsCollected, 5); i++) {
+                    const star = document.createElement('span');
+                    star.className = 'star';
+                    star.textContent = '⭐';
+                    if (i < this.starsCollected) {
+                        star.classList.add('collected');
+                    }
+                    starsContainer.appendChild(star);
+                }
             }
             
             startTimer() {
@@ -664,6 +1498,70 @@
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + duration);
             }
+            
+            // Text-to-Speech helper (guarded)
+            speak(text) {
+                try {
+                    if (!this.audioEnabled) return;
+                    if (!this.synth || typeof SpeechSynthesisUtterance === 'undefined') return;
+                    const utter = new SpeechSynthesisUtterance(text);
+                    utter.lang = this.language || 'it-IT';
+                    // Prefer a voice matching the language if available
+                    const voices = this.synth.getVoices ? this.synth.getVoices() : [];
+                    const targetLang = (utter.lang || '').toLowerCase();
+                    const match = voices.find(v => (v.lang || '').toLowerCase().startsWith(targetLang));
+                    if (match) utter.voice = match;
+                    // Avoid overlapping speech
+                    try { this.synth.cancel(); } catch (_) {}
+                    this.synth.speak(utter);
+                } catch (e) {
+                    // Ignore TTS errors silently
+                }
+            }
+
+            // Toggle audio preference and persist
+            toggleAudio() {
+                this.audioEnabled = !this.audioEnabled;
+                try { localStorage.setItem('letterHuntAudioEnabled', this.audioEnabled ? 'on' : 'off'); } catch (_) {}
+                this.updateAudioToggleUI();
+            }
+
+            updateAudioToggleUI() {
+                const btn = document.getElementById('audioToggleButton');
+                if (!btn) return;
+                const on = !!this.audioEnabled;
+                btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                btn.textContent = on ? '🔊 Audio: ON' : '🔇 Audio: OFF';
+                btn.style.opacity = on ? '1' : '0.7';
+            }
+            
+            launchConfetti() {
+                const container = document.createElement('div');
+                container.className = 'confetti';
+                document.body.appendChild(container);
+
+                const colors = ['#FFD166', '#06D6A0', '#EF476F', '#118AB2', '#FFC300'];
+                const pieces = 60;
+                for (let i = 0; i < pieces; i++) {
+                    const piece = document.createElement('div');
+                    piece.style.position = 'absolute';
+                    piece.style.left = Math.random() * 100 + '%';
+                    piece.style.top = '-10%';
+                    piece.style.width = '8px';
+                    piece.style.height = '14px';
+                    piece.style.background = colors[i % colors.length];
+                    piece.style.opacity = '0.9';
+                    piece.style.transform = `rotate(${Math.random()*360}deg)`;
+                    piece.style.transition = 'transform 1.2s ease, top 1.2s ease, opacity 1.2s ease';
+                    container.appendChild(piece);
+                    setTimeout(() => {
+                        piece.style.top = '110%';
+                        piece.style.transform = `translateY(100vh) rotate(${Math.random()*360}deg)`;
+                        piece.style.opacity = '0.6';
+                    }, 20 + i*8);
+                }
+                setTimeout(() => container.remove(), 2000);
+            }
         }
         
         // Initialize game
@@ -680,6 +1578,12 @@
         function restartGame() {
             document.getElementById('levelCompleteDialog').style.display = 'none';
             game = new LetterHuntGame();
+        }
+
+        function toggleAudio() {
+            if (game && typeof game.toggleAudio === 'function') {
+                game.toggleAudio();
+            }
         }
     </script>
 </body>
