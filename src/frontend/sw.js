@@ -1,13 +1,13 @@
-const CACHE_NAME = 'kidsplay-v2.1-fixed'; // Aggiornato per forzare nuovo cache
+const CACHE_NAME = 'kidsplay-v2.2-restructured'; // Aggiornato per la nuova struttura
 const urlsToCache = [
     '/',
     '/index.html',
-    '/common/core/game-engine.js',
-    '/common/core/input-manager.js',
-    '/common/core/audio-manager.js',
-    '/common/styles/base.css',
-    '/common/styles/mobile.css',
-    '/games.json',
+    '/shared/common/core/game-engine.js',
+    '/shared/common/core/input-manager.js',
+    '/shared/common/core/audio-manager.js',
+    '/shared/common/styles/base.css',
+    '/shared/common/styles/mobile.css',
+    '/data/games.json',
     '/manifest.json',
     '/games/educational/snake/index.html'
 ];

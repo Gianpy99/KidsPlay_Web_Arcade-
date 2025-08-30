@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speedy Adventures - KidsPlay</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 50%, #FECFEF 100%);
+            font-family: 'Comic Sans MS', cursive;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .game-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            border-radius: 10px;
+            margin: 1rem;
+            width: 800px;
+            max-width: 90vw;
+        }
+        
+        .game-canvas {
+            border: 3px solid #2c3e50;
+            border-radius: 10px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            position: relative;
+            overflow: hidden;
+            width: 800px;
+            height: 400px;
+            max-width: 90vw;
+            max-height: 50vh;
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.5rem;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-header">
+        <h1>🏃‍♂️ Speedy Adventures</h1>
+        <a href="../../../index.html" class="back-button">← Torna ai Giochi</a>
+    </div>
+    
+    <div id="gameCanvas" class="game-canvas">
+        <div class="loading">
+            🎮 Caricamento in corso...<br>
+            <small>Il gioco si caricherà a breve!</small>
+        </div>
+    </div>
+
+    <script src="../../../js/user-manager.js"></script>
+    <script src="game.js"></script>
+    
+    <script>
+        // Initialize when ready
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                console.log('🎮 Starting minimal Speedy Adventures...');
+                // Game will be initialized by game.js
+            }, 16);
+            
+            // Initialize user system
+            if (typeof window.userManager !== 'undefined') {
+                window.userManager.initializeForPage();
+            }
+        });
+    </script>
+</body>
+</html>

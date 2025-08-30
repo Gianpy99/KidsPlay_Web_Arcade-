@@ -7,9 +7,9 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>KidsPlay - Giochi Educativi</title>
-    <link rel="stylesheet" href="common/styles/base.css?v=20250827b">
-    <link rel="stylesheet" href="common/styles/mobile.css?v=20250827b">
-    <link rel="manifest" href="manifest.json?v=20250827b">
+    <link rel="stylesheet" href="shared/common/styles/base.css?v=20250830e">
+    <link rel="stylesheet" href="shared/common/styles/mobile.css?v=20250830e">
+    <link rel="manifest" href="manifest.json?v=20250830e">
 </head>
 <body>
     <div id="app">
@@ -32,10 +32,10 @@
         <!-- Gamepad indicator rimosso perché troppo invasivo -->
     </div>
     
-    <script src="js/user-manager.js?v=20250827b"></script>
-    <script src="common/core/game-engine.js?v=20250827b"></script>
-    <script src="common/core/input-manager.js?v=20250827b"></script>
-    <script src="common/core/audio-manager.js?v=20250827b"></script>
+    <script src="js/user-manager.js?v=20250830e"></script>
+    <script src="shared/common/core/game-engine.js?v=20250830e"></script>
+    <script src="shared/common/core/input-manager.js?v=20250830e"></script>
+    <script src="shared/common/core/audio-manager.js?v=20250830e"></script>
     
     <script>
         // Enhanced gamepad management with Chrome compatibility
@@ -301,98 +301,44 @@
         };
         
         console.log('🎮 Debug functions available: testGamepad() and debugGameCards()');
-        console.log('🔧 UPDATED VERSION 20250827b - Navigation debug loaded');
-        
         console.log('🎮 Gamepad system initialized. Use testGamepad() to debug in Chrome.');
         
-        // Debug: Check if elements are present - Updated 2025-08-27 19:35
+        // Debug: Check if elements are present - OPTIMIZED
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM loaded, initializing components...');
-            
-            // Show gamepad instructions for Chrome users
-            setTimeout(showGamepadInstructions, 1000);
-            
             // Initialize gamepad silently
             checkGamepadSilently();
             
-            // Initialize game selection AFTER games are loaded with observer
+            // Initialize game selection AFTER games are loaded - SIMPLIFIED
             function initializeGameNavigation() {
-                console.log('🔍 Trying to initialize game navigation...');
                 gameCards = Array.from(document.querySelectorAll('.game-card'));
-                console.log('🔍 Found game cards:', gameCards.length);
-                
                 if (gameCards.length > 0) {
                     updateGameSelection();
-                    console.log('🎮 Game navigation initialized with', gameCards.length, 'games');
-                    console.log('🔍 Game cards:', gameCards.map(card => card.querySelector('h3')?.textContent));
                     return true;
                 }
-                console.log('🔍 No game cards found yet...');
                 return false;
             }
             
-            // Try immediate initialization
-            console.log('🔍 Attempting immediate game navigation initialization...');
-            if (!initializeGameNavigation()) {
-                console.log('🔍 Immediate init failed, setting up MutationObserver...');
-                // If not ready, use MutationObserver to wait for game cards
-                const observer = new MutationObserver((mutations) => {
-                    console.log('🔍 MutationObserver detected changes:', mutations.length);
-                    for (let mutation of mutations) {
-                        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                            console.log('🔍 Child nodes added:', mutation.addedNodes.length);
-                            // Check if any added nodes contain game cards
-                            for (let node of mutation.addedNodes) {
-                                if (node.nodeType === Node.ELEMENT_NODE) {
-                                    console.log('🔍 Checking node:', node.className, node.tagName);
-                                    if (node.classList?.contains('game-card') || 
-                                        node.querySelector?.('.game-card')) {
-                                        console.log('🔍 Found game card or container with game cards!');
-                                        if (initializeGameNavigation()) {
-                                            observer.disconnect();
-                                            return;
-                                        }
-                                    }
-                                }
-                            }
+            // Simple retry mechanism - much more efficient
+            function tryInitGameNavigation() {
+                if (!initializeGameNavigation()) {
+                    // Only retry 3 times with shorter intervals
+                    setTimeout(() => {
+                        if (!initializeGameNavigation()) {
+                            setTimeout(() => {
+                                initializeGameNavigation(); // Final attempt
+                            }, 500);
                         }
-                    }
-                });
-                
-                observer.observe(document.body, {
-                    childList: true,
-                    subtree: true
-                });
-                
-                // Fallback: stop observing after 5 seconds
-                setTimeout(() => {
-                    console.log('🔍 MutationObserver timeout, trying final initialization...');
-                    observer.disconnect();
-                    initializeGameNavigation(); // Try one more time
-                }, 5000);
-                
-                // Additional fallback: try every second for 10 seconds
-                let attempts = 0;
-                const retryInterval = setInterval(() => {
-                    attempts++;
-                    console.log(`🔍 Retry attempt ${attempts}/10`);
-                    if (initializeGameNavigation() || attempts >= 10) {
-                        clearInterval(retryInterval);
-                    }
-                }, 1000);
-            } else {
-                console.log('🎮 Game navigation initialized immediately!');
+                    }, 200);
+                }
             }
             
+            // Start simple initialization
+            tryInitGameNavigation();
+            
             // Force user manager initialization
-            setTimeout(() => {
-                if (window.userManager) {
-                    console.log('User manager initialized and calling updateUserDisplay');
-                    window.userManager.updateUserDisplay();
-                } else {
-                    console.error('UserManager not found after timeout!');
-                }
-            }, 500);
+            if (window.userManager) {
+                window.userManager.updateUserDisplay();
+            }
         });
         
         // Service Worker temporaneamente disabilitato per debug
