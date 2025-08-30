@@ -13,7 +13,8 @@
         "snake",
         "blockworld",
         "speedy-adventures",
-        "dino-explorer"
+        "dino-explorer",
+        "digital-subbuteo"
     ],
     "gamepad_enabled": true,
     "parental_controls": {

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KidsPlay Server - Performance Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #4a5568;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .status.online { background: #48bb78; }
+        .status.slow { background: #ed8936; }
+        .status.offline { background: #f56565; }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #4299e1;
+        }
+        
+        .metric-card h3 {
+            color: #4a5568;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        
+        .metric-unit {
+            font-size: 0.6em;
+            color: #718096;
+            margin-left: 5px;
+        }
+        
+        .slow-requests {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .slow-requests h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .slow-request-item {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .slow-endpoints {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .endpoint-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            color: #4a5568;
+        }
+        
+        .endpoint-time {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+        
+        .refresh-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background: #3182ce;
+        }
+        
+        .auto-refresh {
+            background: #48bb78;
+        }
+        
+        .auto-refresh:hover {
+            background: #38a169;
+        }
+        
+        .last-updated {
+            text-align: center;
+            color: #718096;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+        
+        .error {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 KidsPlay Server Monitor</h1>
+            <div class="status" id="serverStatus">Caricamento...</div>
+        </div>
+        
+        <div class="controls" style="text-align: center; margin-bottom: 20px;">
+            <button class="refresh-btn" onclick="loadStats()">🔄 Aggiorna</button>
+            <button class="refresh-btn auto-refresh" id="autoRefreshBtn" onclick="toggleAutoRefresh()">
+                ⏰ Auto-refresh: OFF
+            </button>
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div class="metrics-grid" id="metricsGrid">
+            <!-- Metrics will be populated here -->
+        </div>
+        
+        <div class="slow-requests" id="slowRequests">
+            <h3>🐌 Richieste Lente (>500ms)</h3>
+            <div id="slowRequestsList">Caricamento...</div>
+        </div>
+        
+        <div class="slow-endpoints" id="slowEndpoints">
+            <h3>📊 Endpoint più Lenti (media)</h3>
+            <div id="slowEndpointsList">Caricamento...</div>
+        </div>
+        
+        <div class="last-updated" id="lastUpdated">
+            Ultimo aggiornamento: Mai
+        </div>
+    </div>
+
+    <script>
+        let autoRefreshInterval = null;
+        let isAutoRefresh = false;
+        
+        async function loadStats() {
+            try {
+                const response = await fetch('/debug/performance');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const stats = await response.json();
+                displayStats(stats);
+                hideError();
+                
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                showError(`Errore nel caricamento delle statistiche: ${error.message}`);
+            }
+        }
+        
+        function displayStats(stats) {
+            // Update server status
+            const statusEl = document.getElementById('serverStatus');
+            const avgResponseTime = stats.avg_response_time_ms;
+            
+            if (avgResponseTime < 100) {
+                statusEl.className = 'status online';
+                statusEl.textContent = '🟢 Online - Performante';
+            } else if (avgResponseTime < 500) {
+                statusEl.className = 'status slow';
+                statusEl.textContent = '🟡 Online - Lento';
+            } else {
+                statusEl.className = 'status offline';
+                statusEl.textContent = '🔴 Online - Molto Lento';
+            }
+            
+            // Update metrics grid
+            const metricsGrid = document.getElementById('metricsGrid');
+            metricsGrid.innerHTML = `
+                <div class="metric-card">
+                    <h3>Uptime</h3>
+                    <div class="metric-value">
+                        ${formatUptime(stats.uptime_seconds)}
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>Richieste Totali</h3>
+                    <div class="metric-value">
+                        ${stats.total_requests.toLocaleString()}
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>Tempo Risposta Medio</h3>
+                    <div class="metric-value">
+                        ${stats.avg_response_time_ms.toFixed(1)}
+                        <span class="metric-unit">ms</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>Richieste/Minuto</h3>
+                    <div class="metric-value">
+                        ${stats.requests_per_minute}
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>CPU Corrente</h3>
+                    <div class="metric-value">
+                        ${stats.current_cpu_percent.toFixed(1)}
+                        <span class="metric-unit">%</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>RAM Corrente</h3>
+                    <div class="metric-value">
+                        ${stats.current_memory_percent.toFixed(1)}
+                        <span class="metric-unit">%</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>CPU Media</h3>
+                    <div class="metric-value">
+                        ${stats.avg_cpu_percent.toFixed(1)}
+                        <span class="metric-unit">%</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <h3>Richieste Lente</h3>
+                    <div class="metric-value">
+                        ${stats.slow_requests_count}
+                    </div>
+                </div>
+            `;
+            
+            // Update slow requests
+            const slowRequestsList = document.getElementById('slowRequestsList');
+            if (stats.recent_slow_requests && stats.recent_slow_requests.length > 0) {
+                slowRequestsList.innerHTML = stats.recent_slow_requests
+                    .slice(-10) // Last 10 slow requests
+                    .reverse()
+                    .map(req => `
+                        <div class="slow-request-item">
+                            <strong>${req.method} ${req.path}</strong><br>
+                            🕐 ${req.response_time.toFixed(3)}s | 
+                            📅 ${new Date(req.timestamp).toLocaleTimeString()} |
+                            📊 ${req.status_code} |
+                            📦 ${formatBytes(req.file_size)}
+                        </div>
+                    `).join('');
+            } else {
+                slowRequestsList.innerHTML = '<p style="color: #48bb78;">🎉 Nessuna richiesta lenta nelle ultime richieste!</p>';
+            }
+            
+            // Update slow endpoints
+            const slowEndpointsList = document.getElementById('slowEndpointsList');
+            if (stats.slowest_endpoints && stats.slowest_endpoints.length > 0) {
+                slowEndpointsList.innerHTML = stats.slowest_endpoints
+                    .map(([endpoint, avgTime]) => `
+                        <div class="endpoint-item">
+                            <span class="endpoint-path">${endpoint}</span>
+                            <span class="endpoint-time">${(avgTime * 1000).toFixed(1)}ms</span>
+                        </div>
+                    `).join('');
+            } else {
+                slowEndpointsList.innerHTML = '<p style="color: #718096;">Nessun dato sugli endpoint disponibile.</p>';
+            }
+            
+            // Update last updated time
+            document.getElementById('lastUpdated').textContent = 
+                `Ultimo aggiornamento: ${new Date().toLocaleTimeString()}`;
+        }
+        
+        function formatUptime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            } else if (minutes > 0) {
+                return `${minutes}m`;
+            } else {
+                return `${Math.floor(seconds)}s`;
+            }
+        }
+        
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+        
+        function toggleAutoRefresh() {
+            const btn = document.getElementById('autoRefreshBtn');
+            
+            if (isAutoRefresh) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                isAutoRefresh = false;
+                btn.textContent = '⏰ Auto-refresh: OFF';
+                btn.classList.remove('auto-refresh');
+            } else {
+                autoRefreshInterval = setInterval(loadStats, 5000); // Every 5 seconds
+                isAutoRefresh = true;
+                btn.textContent = '⏰ Auto-refresh: ON';
+                btn.classList.add('auto-refresh');
+                loadStats(); // Load immediately
+            }
+        }
+        
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+        
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+        
+        // Load stats on page load
+        document.addEventListener('DOMContentLoaded', loadStats);
+    </script>
+</body>
+</html>

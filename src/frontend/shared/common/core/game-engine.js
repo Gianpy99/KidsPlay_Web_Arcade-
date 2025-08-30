@@ -57,11 +57,21 @@ class KidsPlayEngine {
     async loadGamesCatalog() {
         try {
             const response = await fetch('data/games.json');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
             const catalogData = await response.json();
             this.gamesList = catalogData.games;
-            console.log(`🎲 Loaded ${this.gamesList.length} games`);
+            console.log(`🎲 Loaded ${this.gamesList.length} games from catalog`);
+            
+            // Check for digital-subbuteo specifically
+            const digitalSubbuteo = this.gamesList.find(g => g.id === 'digital-subbuteo');
+            if (digitalSubbuteo) {
+                console.log('✅ Digital Subbuteo loaded successfully');
+            }
         } catch (error) {
-            console.error('Failed to load games catalog:', error);
+            console.error('❌ Failed to load games catalog:', error);
+            this.gamesList = [];
         }
     }
     
@@ -73,7 +83,10 @@ class KidsPlayEngine {
     
     renderGamesCatalog() {
         const catalogElement = document.getElementById('game-catalog');
-        if (!catalogElement) return;
+        if (!catalogElement) {
+            console.error('❌ game-catalog element not found!');
+            return;
+        }
         
         catalogElement.innerHTML = '';
         
@@ -82,10 +95,24 @@ class KidsPlayEngine {
             return this.config.enabled_games.includes(game.id);
         });
         
+        if (availableGames.length === 0) {
+            console.warn('⚠️ No games available to render!');
+            catalogElement.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nessun gioco disponibile</p>';
+            return;
+        }
+        
         availableGames.forEach(game => {
             const gameCard = this.createGameCard(game);
             catalogElement.appendChild(gameCard);
         });
+        
+        console.log(`� Rendered ${availableGames.length} games successfully`);
+        
+        // Verify Digital Subbuteo is rendered
+        const digitalSubbuteo = availableGames.find(g => g.id === 'digital-subbuteo');
+        if (digitalSubbuteo) {
+            console.log('✅ Digital Subbuteo rendered in catalog');
+        }
     }
     
     createGameCard(game) {
@@ -171,7 +198,8 @@ class KidsPlayEngine {
                 'snake',
                 'blockworld',
                 'speedy-adventures',
-                'dino-explorer'
+                'dino-explorer',
+                'digital-subbuteo'
             ],
             speed_multiplier: 0.8
         };

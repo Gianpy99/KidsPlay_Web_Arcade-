@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Subbuteo - KidsPlay</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #2E8B57 0%, #90EE90 100%);
+            font-family: 'Comic Sans MS', cursive;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: 50px;
+        }
+        
+        .game-header {
+            background: linear-gradient(135deg, #228B22 0%, #32CD32 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            border-radius: 10px;
+            margin: 1rem auto;
+            max-width: 800px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+        
+        .game-header h1 {
+            font-size: 2rem;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .controls-info {
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        
+        .game-field {
+            width: 800px;
+            height: 500px;
+            background: linear-gradient(45deg, #228B22 0%, #32CD32 100%);
+            border: 4px solid #FFFFFF;
+            border-radius: 15px;
+            position: relative;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+        
+        .field-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .field-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .center-line {
+            position: absolute;
+            left: 50%;
+            top: 10%;
+            bottom: 10%;
+            width: 3px;
+            background: white;
+            transform: translateX(-50%);
+        }
+        
+        .center-circle {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 80px;
+            height: 80px;
+            border: 3px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .goal {
+            position: absolute;
+            width: 20px;
+            height: 120px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            border: 2px solid white;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .goal.left {
+            left: 0;
+            border-left: none;
+        }
+        
+        .goal.right {
+            right: 0;
+            border-right: none;
+        }
+        
+        .player {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 3px solid white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            user-select: none;
+        }
+        
+        .player:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,255,255,0.8);
+        }
+        
+        .player.selected {
+            box-shadow: 0 0 20px #FFD700;
+            border-color: #FFD700;
+        }
+        
+        .player.blue {
+            background: linear-gradient(45deg, #4A90E2, #2E5C8A);
+        }
+        
+        .player.red {
+            background: linear-gradient(45deg, #E74C3C, #A93226);
+        }
+        
+        .player.goalkeeper {
+            border-width: 4px;
+            font-size: 1.4rem;
+        }
+        
+        .ball {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle at 30% 30%, white, #333);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .ball:hover {
+            transform: scale(1.1);
+        }
+        
+        .ball.moving {
+            transition: none;
+        }
+        
+        .power-indicator {
+            position: absolute;
+            pointer-events: none;
+            z-index: 15;
+            display: none;
+        }
+        
+        .power-line {
+            stroke: #FFD700;
+            stroke-width: 3;
+            stroke-dasharray: 5,5;
+            opacity: 0.8;
+        }
+        
+        .toolbar {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .team-selector {
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 15px;
+            margin: 10px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .team-selector h3 {
+            text-align: center;
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+        
+        .team-selection {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .team-column {
+            min-width: 200px;
+        }
+        
+        .team-column h4 {
+            margin: 0 0 10px 0;
+            text-align: center;
+            color: #2c3e50;
+        }
+        
+        .team-column select {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            margin-bottom: 10px;
+        }
+        
+        .custom-team {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .custom-team input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .color-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .color-row input[type="color"] {
+            width: 50px;
+            height: 35px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .custom-team button {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+        }
+        
+        .custom-team button:hover {
+            transform: translateY(-1px);
+        }
+        
+        /* Modalità Rigori */
+        .penalty-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2E8B57 0%, #90EE90 100%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .penalty-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+        
+        .penalty-header h2 {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin: 0;
+        }
+        
+        .close-penalty {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .penalty-field {
+            background: #2ECC71;
+            width: 600px;
+            height: 400px;
+            border-radius: 10px;
+            position: relative;
+            border: 3px solid white;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .penalty-goal {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 120px;
+            background: #ddd;
+            border: 4px solid white;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .penalty-goal-frame {
+            position: absolute;
+            inset: 0;
+            border: 2px solid #888;
+            border-bottom: none;
+        }
+        
+        .goal-sections {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1px;
+        }
+        
+        .goal-section {
+            background: rgba(255,255,255,0.1);
+            border: 1px dashed rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .goal-section:hover {
+            background: rgba(255,215,0,0.3);
+            transform: scale(1.05);
+        }
+        
+        .goal-section.goalkeeper-choice {
+            background: rgba(255,0,0,0.4);
+            color: white;
+        }
+        
+        .goal-section.shooter-choice {
+            background: rgba(0,0,255,0.4);
+            color: white;
+        }
+        
+        .penalty-goalkeeper {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 32px;
+            z-index: 10;
+            transition: all 0.5s ease;
+        }
+        
+        .penalty-ball {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            z-index: 5;
+            transition: all 1s ease;
+        }
+        
+        .penalty-dot {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+        
+        .penalty-controls {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .penalty-phase h3 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        
+        .penalty-phase p {
+            margin: 0 0 15px 0;
+            color: #555;
+        }
+        
+        .penalty-choices {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        
+        .choice-display {
+            padding: 10px 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            color: #2c3e50;
+            font-weight: bold;
+            min-width: 150px;
+        }
+        
+        .choice-display.selected {
+            background: #e8f5e8;
+            border-color: #28a745;
+        }
+        
+        #penaltyExecute, #penaltyReset {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+        
+        #penaltyExecute:hover, #penaltyReset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .tool-button {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .tool-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .tool-button.active {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #2c3e50;
+        }
+        
+        .scoreboard {
+            display: flex;
+            gap: 20px;
+            color: white;
+            font-size: 1.2rem;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin-bottom: 10px;
+        }
+        
+        .team-score {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .score {
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        /* Tifosi animati */
+        .crowd {
+            position: absolute;
+            z-index: 15;
+            pointer-events: none;
+        }
+        
+        .crowd.top {
+            top: -45px;
+            left: -30px;
+            right: -30px;
+            height: 40px;
+        }
+        
+        .crowd.bottom {
+            bottom: -65px;
+            left: -30px;
+            right: -30px;
+            height: 65px;
+        }
+        
+        .crowd.left {
+            top: -30px;
+            left: -65px;
+            width: 65px;
+            height: calc(100% + 60px);
+        }
+        
+        .crowd.right {
+            top: -30px;
+            right: -65px;
+            width: 65px;
+            height: calc(100% + 60px);
+        }
+        
+        .fan {
+            position: absolute;
+            width: 25px;
+            height: 35px;
+            border-radius: 12px 12px 6px 6px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+            animation: cheer 1.5s ease-in-out infinite;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            border: 3px solid #FFD700;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+            z-index: 15;
+        }
+        
+        .fan:nth-child(odd) {
+            animation-delay: 0.5s;
+            background: linear-gradient(45deg, #54a0ff, #5f27cd, #00d2d3, #ff9ff3);
+        }
+        
+        .fan:nth-child(3n) {
+            animation-delay: 1s;
+            background: linear-gradient(45deg, #10ac84, #ee5a24, #0abde3, #feca57);
+        }
+        
+        @keyframes cheer {
+            0%, 100% { transform: translateY(0) scale(1); }
+            25% { transform: translateY(-5px) scale(1.1); }
+            50% { transform: translateY(-2px) scale(0.95); }
+            75% { transform: translateY(-7px) scale(1.05); }
+        }
+        
+        /* Traiettoria del personaggio */
+        .trajectory-line {
+            position: absolute;
+            width: 3px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            border-radius: 2px;
+            transform-origin: bottom center;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.8;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+        }
+        
+        .back-button {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .back-button:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .turn-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 15px;
+            border-radius: 20px;
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1000;
+            color: #2c3e50;
+        }
+        
+        .celebration h2 {
+            font-size: 2.5rem;
+            margin: 0 0 15px 0;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        @keyframes goal-celebration {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+        
+        .celebration.show {
+            display: block;
+            animation: goal-celebration 0.6s ease-in-out 3;
+        }
+        
+        @media (max-width: 768px) {
+            .game-field {
+                width: 95vw;
+                height: 60vh;
+                max-width: 700px;
+            }
+            
+            .player {
+                width: 30px;
+                height: 30px;
+                font-size: 1rem;
+            }
+            
+            .ball {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .game-header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../../../index.html" class="back-button">
+        ← Torna ai Giochi
+    </a>
+    
+    <div class="game-header">
+        <h1>⚽ Digital Subbuteo</h1>
+        <div class="controls-info">
+            <p><strong>Calcio da tavolo digitale!</strong> Tocca e trascina i giocatori per tirare verso la porta!</p>
+        </div>
+    </div>
+    
+    <div class="scoreboard">
+        <div class="team-score">
+            <div style="width: 20px; height: 20px; background: linear-gradient(45deg, #4A90E2, #2E5C8A); border-radius: 50%;"></div>
+            <span>Blu</span>
+            <span class="score" id="blueScore">0</span>
+        </div>
+        <div style="color: #FFD700;">vs</div>
+        <div class="team-score">
+            <span class="score" id="redScore">0</span>
+            <span>Rosso</span>
+            <div style="width: 20px; height: 20px; background: linear-gradient(45deg, #E74C3C, #A93226); border-radius: 50%;"></div>
+        </div>
+    </div>
+    
+    <div class="turn-indicator" id="turnIndicator">
+        Turno: <span id="currentTeam">Blu</span>
+    </div>
+    
+    <!-- Selettore Squadre -->
+    <div class="team-selector">
+        <h3>🏆 Scegli le Squadre</h3>
+        <div class="team-selection">
+            <div class="team-column">
+                <h4>Squadra Blu</h4>
+                <select id="blueTeamSelect" onchange="changeTeam('blue', this.value)">
+                    <option value="classic">Classico Blu</option>
+                    <option value="inter">Inter</option>
+                    <option value="italia">Italia</option>
+                    <option value="inghilterra">Inghilterra</option>
+                    <option value="chelsea">Chelsea</option>
+                    <option value="manchester">Manchester City</option>
+                    <option value="custom">Personalizzata...</option>
+                </select>
+                <div id="blueCustomTeam" class="custom-team" style="display: none;">
+                    <input type="text" id="blueTeamName" placeholder="Nome squadra" maxlength="15">
+                    <div class="color-row">
+                        <input type="color" id="blueColor1" value="#4A90E2">
+                        <input type="color" id="blueColor2" value="#2E5C8A">
+                    </div>
+                    <button onclick="applyCustomTeam('blue')">Applica</button>
+                </div>
+            </div>
+            <div class="team-column">
+                <h4>Squadra Rossa</h4>
+                <select id="redTeamSelect" onchange="changeTeam('red', this.value)">
+                    <option value="classic">Classico Rosso</option>
+                    <option value="milan">Milan</option>
+                    <option value="manchester">Manchester United</option>
+                    <option value="inghilterra">Inghilterra</option>
+                    <option value="italia">Italia</option>
+                    <option value="custom">Personalizzata...</option>
+                </select>
+                <div id="redCustomTeam" class="custom-team" style="display: none;">
+                    <input type="text" id="redTeamName" placeholder="Nome squadra" maxlength="15">
+                    <div class="color-row">
+                        <input type="color" id="redColor1" value="#E74C3C">
+                        <input type="color" id="redColor2" value="#A93226">
+                    </div>
+                    <button onclick="applyCustomTeam('red')">Applica</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="tool-button active" onclick="selectMode('normal')" id="normalMode">
+            ⚽ Modalità Normale
+        </div>
+        <div class="tool-button" onclick="selectMode('skills')" id="skillsMode">
+            🎯 Rigori
+        </div>
+        <div class="tool-button" onclick="resetGame()">
+            🔄 Nuova Partita
+        </div>
+    </div>
+    
+    <div class="game-field" id="gameField">
+        <!-- Tifosi animati -->
+        <div class="crowd bottom" id="crowdBottom"></div>
+        <div class="crowd left" id="crowdLeft"></div>
+        <div class="crowd right" id="crowdRight"></div>
+        
+        <div class="field-lines">
+            <div class="center-line"></div>
+            <div class="center-circle"></div>
+        </div>
+        
+        <div class="goal left"></div>
+        <div class="goal right"></div>
+        
+        <!-- Players will be created by JavaScript -->
+        <div class="ball" id="ball"></div>
+        
+        <svg class="power-indicator" id="powerIndicator">
+            <line class="power-line" id="powerLine" x1="0" y1="0" x2="0" y2="0"></line>
+        </svg>
+    </div>
+    
+    <div class="celebration" id="celebration">
+        <h2 id="celebrationTitle">🎉 GOAL! 🎉</h2>
+        <p id="celebrationText">Ottimo tiro!</p>
+        <button class="tool-button" onclick="closeCelebration()">Continua! ⚽</button>
+    </div>
+
+    <!-- Modalità Rigori -->
+    <div class="penalty-mode" id="penaltyMode" style="display: none;">
+        <div class="penalty-header">
+            <h2>🎯 MODALITÀ RIGORI</h2>
+            <button class="close-penalty" onclick="closePenaltyMode()">❌ Torna al Gioco</button>
+        </div>
+        
+        <div class="penalty-field">
+            <div class="penalty-goal">
+                <div class="penalty-goal-frame"></div>
+                <div class="goal-sections" id="goalSections">
+                    <div class="goal-section" data-section="1">1</div>
+                    <div class="goal-section" data-section="2">2</div>
+                    <div class="goal-section" data-section="3">3</div>
+                    <div class="goal-section" data-section="4">4</div>
+                    <div class="goal-section" data-section="5">5</div>
+                    <div class="goal-section" data-section="6">6</div>
+                    <div class="goal-section" data-section="7">7</div>
+                    <div class="goal-section" data-section="8">8</div>
+                </div>
+                <div class="penalty-goalkeeper" id="penaltyGoalkeeper">🥅</div>
+            </div>
+            
+            <div class="penalty-ball" id="penaltyBall">⚽</div>
+            <div class="penalty-dot"></div>
+        </div>
+        
+        <div class="penalty-controls">
+            <div class="penalty-phase" id="penaltyPhase">
+                <h3>Fase 1: Il portiere sceglie dove tuffarsi</h3>
+                <p>Portiere, clicca su una sezione della porta!</p>
+            </div>
+            <div class="penalty-choices">
+                <div id="goalkeeperChoice" class="choice-display">Portiere: In attesa...</div>
+                <div id="shooterChoice" class="choice-display">Tiratore: In attesa...</div>
+            </div>
+            <button id="penaltyExecute" onclick="executePenalty()" style="display: none;">⚽ CALCIO IL RIGORE!</button>
+            <button id="penaltyReset" onclick="resetPenalty()">🔄 Nuovo Rigore</button>
+        </div>
+    </div>
+
+    <script src="../../../js/user-manager.js"></script>
+    <script>
+        class DigitalSubbuteo {
+            constructor() {
+                this.gameField = document.getElementById('gameField');
+                this.ball = document.getElementById('ball');
+                this.powerIndicator = document.getElementById('powerIndicator');
+                this.powerLine = document.getElementById('powerLine');
+                
+                this.fieldWidth = 800;
+                this.fieldHeight = 500;
+                this.gameMode = 'normal'; // 'normal' or 'skills'
+                this.currentTurn = 'blue'; // 'blue' or 'red'
+                this.selectedPlayer = null;
+                this.isDragging = false;
+                this.startDragPos = null;
+                
+                this.score = { blue: 0, red: 0 };
+                this.maxGoals = 3;
+                
+                this.teams = {
+                    blue: { players: [], color: 'blue', side: 'left' },
+                    red: { players: [], color: 'red', side: 'right' }
+                };
+                
+                this.ballPosition = { x: 400, y: 250 };
+                this.ballVelocity = { x: 0, y: 0 };
+                this.isMoving = false;
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupPlayers();
+                this.setupEventListeners();
+                this.resetBall();
+                this.updateUI();
+                this.resizeField();
+                this.createCrowd();
+                
+                // User management integration
+                if (typeof initUserManager === 'function') {
+                    initUserManager().then(() => {
+                        console.log('Digital Subbuteo: User manager initialized');
+                    }).catch(err => {
+                        console.warn('Digital Subbuteo: User manager not available');
+                    });
+                }
+            }
+            
+            setupPlayers() {
+                // Clear existing players
+                this.gameField.querySelectorAll('.player').forEach(p => p.remove());
+                
+                // Blue team (left side)
+                const bluePositions = [
+                    { x: 60, y: 250, type: 'goalkeeper' },  // Goalkeeper
+                    { x: 150, y: 150, type: 'field' },      // Defender
+                    { x: 150, y: 350, type: 'field' },      // Defender
+                    { x: 250, y: 100, type: 'field' },      // Midfielder
+                    { x: 250, y: 250, type: 'field' },      // Midfielder
+                    { x: 250, y: 400, type: 'field' }       // Midfielder
+                ];
+                
+                // Red team (right side)
+                const redPositions = [
+                    { x: 740, y: 250, type: 'goalkeeper' }, // Goalkeeper
+                    { x: 650, y: 150, type: 'field' },      // Defender
+                    { x: 650, y: 350, type: 'field' },      // Defender
+                    { x: 550, y: 100, type: 'field' },      // Midfielder
+                    { x: 550, y: 250, type: 'field' },      // Midfielder
+                    { x: 550, y: 400, type: 'field' }       // Midfielder
+                ];
+                
+                this.teams.blue.players = this.createTeam('blue', bluePositions);
+                this.teams.red.players = this.createTeam('red', redPositions);
+            }
+            
+            createTeam(color, positions) {
+                const players = [];
+                
+                positions.forEach((pos, index) => {
+                    const player = document.createElement('div');
+                    player.className = `player ${color} ${pos.type}`;
+                    player.style.left = pos.x + 'px';
+                    player.style.top = pos.y + 'px';
+                    player.textContent = pos.type === 'goalkeeper' ? '🥅' : '⚽';
+                    player.dataset.team = color;
+                    player.dataset.type = pos.type;
+                    player.dataset.index = index;
+                    
+                    this.gameField.appendChild(player);
+                    players.push({
+                        element: player,
+                        originalPos: { ...pos },
+                        currentPos: { ...pos },
+                        type: pos.type,
+                        canMove: true
+                    });
+                });
+                
+                return players;
+            }
+            
+            setupEventListeners() {
+                // Mouse events
+                this.gameField.addEventListener('mousedown', this.onMouseDown.bind(this));
+                this.gameField.addEventListener('mousemove', this.onMouseMove.bind(this));
+                this.gameField.addEventListener('mouseup', this.onMouseUp.bind(this));
+                
+                // Touch events
+                this.gameField.addEventListener('touchstart', this.onTouchStart.bind(this));
+                this.gameField.addEventListener('touchmove', this.onTouchMove.bind(this));
+                this.gameField.addEventListener('touchend', this.onTouchEnd.bind(this));
+                
+                // Resize handler
+                window.addEventListener('resize', this.resizeField.bind(this));
+            }
+            
+            createCrowd() {
+                const fanEmojis = ['🙋‍♂️', '🙋‍♀️', '👨', '👩', '🧑', '👦', '👧', '🤾‍♂️', '🤾‍♀️'];
+                
+                // Tifosi in basso
+                const crowdBottom = document.getElementById('crowdBottom');
+                if (crowdBottom) {
+                    for (let i = 0; i < 20; i++) {
+                        const fan = document.createElement('div');
+                        fan.className = 'fan';
+                        fan.textContent = fanEmojis[Math.floor(Math.random() * fanEmojis.length)];
+                        fan.style.left = `${(i * 40) + Math.random() * 20}px`;
+                        fan.style.animationDelay = `${Math.random() * 2}s`;
+                        crowdBottom.appendChild(fan);
+                    }
+                }
+                
+                // Tifosi a sinistra (dietro la porta)
+                const crowdLeft = document.getElementById('crowdLeft');
+                if (crowdLeft) {
+                    for (let i = 0; i < 15; i++) {
+                        const fan = document.createElement('div');
+                        fan.className = 'fan';
+                        fan.textContent = fanEmojis[Math.floor(Math.random() * fanEmojis.length)];
+                        fan.style.top = `${(i * 30) + Math.random() * 15}px`;
+                        fan.style.animationDelay = `${Math.random() * 2}s`;
+                        crowdLeft.appendChild(fan);
+                    }
+                }
+                
+                // Tifosi a destra (dietro la porta)
+                const crowdRight = document.getElementById('crowdRight');
+                if (crowdRight) {
+                    for (let i = 0; i < 15; i++) {
+                        const fan = document.createElement('div');
+                        fan.className = 'fan';
+                        fan.textContent = fanEmojis[Math.floor(Math.random() * fanEmojis.length)];
+                        fan.style.top = `${(i * 30) + Math.random() * 15}px`;
+                        fan.style.animationDelay = `${Math.random() * 2}s`;
+                        crowdRight.appendChild(fan);
+                    }
+                }
+            }
+            
+            onMouseDown(e) {
+                if (this.isMoving) return;
+                
+                const rect = this.gameField.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                this.handleInteractionStart(x, y);
+            }
+            
+            onMouseMove(e) {
+                if (!this.isDragging) return;
+                
+                const rect = this.gameField.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                this.handleInteractionMove(x, y);
+            }
+            
+            onMouseUp(e) {
+                if (!this.isDragging) return;
+                
+                const rect = this.gameField.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                this.handleInteractionEnd(x, y);
+            }
+            
+            onTouchStart(e) {
+                e.preventDefault();
+                if (this.isMoving) return;
+                
+                const touch = e.touches[0];
+                const rect = this.gameField.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                
+                this.handleInteractionStart(x, y);
+            }
+            
+            onTouchMove(e) {
+                e.preventDefault();
+                if (!this.isDragging) return;
+                
+                const touch = e.touches[0];
+                const rect = this.gameField.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                
+                this.handleInteractionMove(x, y);
+            }
+            
+            onTouchEnd(e) {
+                e.preventDefault();
+                if (!this.isDragging) return;
+                
+                this.handleInteractionEnd(0, 0);
+            }
+            
+            handleInteractionStart(x, y) {
+                const clickedElement = document.elementFromPoint(
+                    x + this.gameField.getBoundingClientRect().left,
+                    y + this.gameField.getBoundingClientRect().top
+                );
+                
+                // Check if clicked on a player from current team
+                if (clickedElement && clickedElement.classList.contains('player')) {
+                    const team = clickedElement.dataset.team;
+                    if (team === this.currentTurn) {
+                        this.selectedPlayer = clickedElement;
+                        this.isDragging = true;
+                        this.startDragPos = { x, y };
+                        
+                        // Highlight selected player
+                        this.clearSelection();
+                        clickedElement.classList.add('selected');
+                        
+                        return;
+                    }
+                }
+                
+                // Check if clicked on ball (for direct kicks)
+                const ballRect = this.ball.getBoundingClientRect();
+                const fieldRect = this.gameField.getBoundingClientRect();
+                const ballX = ballRect.left + ballRect.width/2 - fieldRect.left;
+                const ballY = ballRect.top + ballRect.height/2 - fieldRect.top;
+                
+                const ballDistance = Math.sqrt((x - ballX)**2 + (y - ballY)**2);
+                if (ballDistance < 25) {
+                    this.isDragging = true;
+                    this.startDragPos = { x: ballX, y: ballY };
+                    this.selectedPlayer = 'ball';
+                }
+            }
+            
+            handleInteractionMove(x, y) {
+                if (!this.isDragging || !this.startDragPos) return;
+                
+                const dx = x - this.startDragPos.x;
+                const dy = y - this.startDragPos.y;
+                const distance = Math.sqrt(dx*dx + dy*dy);
+                
+                // Show power indicator for both ball and players
+                this.powerIndicator.style.display = 'block';
+                this.powerLine.setAttribute('x1', this.startDragPos.x);
+                this.powerLine.setAttribute('y1', this.startDragPos.y);
+                this.powerLine.setAttribute('x2', x);
+                this.powerLine.setAttribute('y2', y);
+                
+                // Change line color and thickness based on power
+                const maxPower = 150;
+                const power = Math.min(distance / maxPower, 1);
+                const hue = (1 - power) * 120; // Green to red
+                const thickness = 2 + power * 4; // Line gets thicker with more power
+                
+                this.powerLine.style.stroke = `hsl(${hue}, 80%, 50%)`;
+                this.powerLine.style.strokeWidth = thickness;
+                
+                // Show player trajectory if a player is selected (not ball)
+                if (this.selectedPlayer && this.selectedPlayer !== 'ball') {
+                    this.showPlayerTrajectory(dx, dy, power);
+                }
+                
+                // Add power text indicator
+                if (!this.powerText) {
+                    this.powerText = document.createElement('div');
+                    this.powerText.style.position = 'absolute';
+                    this.powerText.style.background = 'rgba(0,0,0,0.8)';
+                    this.powerText.style.color = 'white';
+                    this.powerText.style.padding = '4px 8px';
+                    this.powerText.style.borderRadius = '4px';
+                    this.powerText.style.fontSize = '12px';
+                    this.powerText.style.fontWeight = 'bold';
+                    this.powerText.style.pointerEvents = 'none';
+                    this.powerText.style.zIndex = '1000';
+                    this.gameField.appendChild(this.powerText);
+                }
+                
+                // Update power text
+                const powerPercent = Math.round(power * 100);
+                this.powerText.textContent = `Forza: ${powerPercent}%`;
+                this.powerText.style.left = (x + 15) + 'px';
+                this.powerText.style.top = (y - 30) + 'px';
+                this.powerText.style.display = 'block';
+                this.powerText.style.color = `hsl(${hue}, 80%, 90%)`;
+            }
+            
+            handleInteractionEnd(x, y) {
+                if (!this.isDragging || !this.startDragPos) return;
+                
+                const dx = x - this.startDragPos.x;
+                const dy = y - this.startDragPos.y;
+                const distance = Math.sqrt(dx*dx + dy*dy);
+                
+                // Hide power indicators and trajectory
+                this.powerIndicator.style.display = 'none';
+                if (this.powerText) {
+                    this.powerText.style.display = 'none';
+                }
+                this.hidePlayerTrajectory();
+                
+                if (distance > 10) { // Minimum drag distance
+                    if (this.selectedPlayer === 'ball') {
+                        this.kickBall(-dx, -dy, distance);
+                    } else if (this.selectedPlayer) {
+                        this.movePlayer(this.selectedPlayer, -dx, -dy, distance);
+                    }
+                    
+                    this.switchTurn();
+                }
+                
+                this.clearSelection();
+                this.isDragging = false;
+                this.selectedPlayer = null;
+                this.startDragPos = null;
+            }
+            
+            movePlayer(playerElement, dx, dy, power) {
+                const maxDistance = 100;
+                const actualPower = Math.min(power / 150, 1);
+                
+                const currentLeft = parseInt(playerElement.style.left);
+                const currentTop = parseInt(playerElement.style.top);
+                
+                const newX = Math.max(30, Math.min(this.fieldWidth - 30, 
+                    currentLeft + dx * actualPower * maxDistance / 150));
+                const newY = Math.max(30, Math.min(this.fieldHeight - 30, 
+                    currentTop + dy * actualPower * maxDistance / 150));
+                
+                // Start animated movement with collision checking
+                this.animatePlayerMovement(playerElement, currentLeft, currentTop, newX, newY, actualPower);
+                
+                this.playSound('move');
+            }
+            
+            animatePlayerMovement(playerElement, startX, startY, endX, endY, power) {
+                const startTime = performance.now();
+                const duration = 500; // 0.5 seconds
+                let collisionTriggered = false;
+                
+                const animate = (currentTime) => {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // Easing function for smooth movement
+                    const easedProgress = 1 - Math.pow(1 - progress, 3); // Ease-out cubic
+                    
+                    // Calculate current position
+                    const currentX = startX + (endX - startX) * easedProgress;
+                    const currentY = startY + (endY - startY) * easedProgress;
+                    
+                    // Update player position
+                    playerElement.style.left = currentX + 'px';
+                    playerElement.style.top = currentY + 'px';
+                    
+                    // Check for ball collision only once during movement
+                    if (!collisionTriggered && progress > 0.1 && progress < 0.9) {
+                        const playerCenterX = currentX + 15; // Player radius
+                        const playerCenterY = currentY + 15;
+                        const ballX = this.ballPosition.x;
+                        const ballY = this.ballPosition.y;
+                        
+                        const distance = Math.sqrt(
+                            (playerCenterX - ballX) ** 2 + 
+                            (playerCenterY - ballY) ** 2
+                        );
+                        
+                        if (distance <= 27.5) { // Player radius + ball radius
+                            collisionTriggered = true;
+                            
+                            // Calculate kick direction from player to ball
+                            const kickDirection = {
+                                x: ballX - playerCenterX,
+                                y: ballY - playerCenterY
+                            };
+                            
+                            // Normalize the direction
+                            const length = Math.sqrt(kickDirection.x * kickDirection.x + kickDirection.y * kickDirection.y);
+                            if (length > 0) {
+                                kickDirection.x /= length;
+                                kickDirection.y /= length;
+                            }
+                            
+                            // Calculate kick force based on player movement power
+                            const kickForce = power * 8;
+                            
+                            // Apply force to ball
+                            this.ballVelocity.x = kickDirection.x * kickForce;
+                            this.ballVelocity.y = kickDirection.y * kickForce;
+                            this.isMoving = true;
+                            this.ball.classList.add('moving');
+                            this.animateBall();
+                            this.playSound('kick');
+                        }
+                    }
+                    
+                    // Continue animation if not finished
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        // Reset transition style for future moves
+                        playerElement.style.transition = 'all 0.2s ease';
+                    }
+                };
+                
+                // Remove CSS transition and start manual animation
+                playerElement.style.transition = 'none';
+                requestAnimationFrame(animate);
+            }
+            
+            showPlayerTrajectory(dx, dy, power) {
+                // Remove old trajectory
+                this.hidePlayerTrajectory();
+                
+                if (!this.selectedPlayer || this.selectedPlayer === 'ball') return;
+                
+                const playerRect = this.selectedPlayer.getBoundingClientRect();
+                const fieldRect = this.gameField.getBoundingClientRect();
+                const startX = playerRect.left + playerRect.width/2 - fieldRect.left;
+                const startY = playerRect.top + playerRect.height/2 - fieldRect.top;
+                
+                // Calculate movement parameters
+                const maxDistance = 100;
+                const actualPower = Math.min(Math.sqrt(dx*dx + dy*dy) / 150, 1);
+                const moveDistance = actualPower * maxDistance;
+                
+                // Calculate trajectory points
+                const steps = 8;
+                this.trajectoryPoints = [];
+                
+                for (let i = 1; i <= steps; i++) {
+                    const progress = i / steps;
+                    const easedProgress = 1 - Math.pow(1 - progress, 3); // Same easing as movement
+                    
+                    const pointX = startX + (-dx / 150) * moveDistance * easedProgress;
+                    const pointY = startY + (-dy / 150) * moveDistance * easedProgress;
+                    
+                    // Check boundaries
+                    const boundedX = Math.max(30, Math.min(this.fieldWidth - 30, pointX));
+                    const boundedY = Math.max(30, Math.min(this.fieldHeight - 30, pointY));
+                    
+                    // Create trajectory point
+                    const point = document.createElement('div');
+                    point.className = 'trajectory-line';
+                    point.style.left = boundedX + 'px';
+                    point.style.top = boundedY + 'px';
+                    point.style.width = '6px';
+                    point.style.height = '6px';
+                    point.style.borderRadius = '50%';
+                    point.style.opacity = 1 - (progress * 0.7); // Fade out towards end
+                    point.style.animationDelay = `${progress * 0.5}s`;
+                    
+                    this.gameField.appendChild(point);
+                    this.trajectoryPoints.push(point);
+                }
+            }
+            
+            hidePlayerTrajectory() {
+                if (this.trajectoryPoints) {
+                    this.trajectoryPoints.forEach(point => {
+                        if (point.parentNode) {
+                            point.parentNode.removeChild(point);
+                        }
+                    });
+                    this.trajectoryPoints = [];
+                }
+            }
+            
+            kickBall(dx, dy, power) {
+                const maxPower = 8;
+                
+                // Normalizza la direzione per evitare bias direzionali
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance > 0) {
+                    const normalizedDx = dx / distance;
+                    const normalizedDy = dy / distance;
+                    const actualPower = Math.min(power / 150, 1);
+                    
+                    this.ballVelocity.x = normalizedDx * maxPower * actualPower;
+                    this.ballVelocity.y = normalizedDy * maxPower * actualPower;
+                } else {
+                    this.ballVelocity.x = 0;
+                    this.ballVelocity.y = 0;
+                }
+                
+                this.isMoving = true;
+                this.ball.classList.add('moving');
+                this.animateBall();
+                
+                this.playSound('kick');
+            }
+            
+            animateBall() {
+                if (!this.isMoving) return;
+                
+                // Update position
+                this.ballPosition.x += this.ballVelocity.x;
+                this.ballPosition.y += this.ballVelocity.y;
+                
+                // Apply friction
+                this.ballVelocity.x *= 0.98;
+                this.ballVelocity.y *= 0.98;
+                
+                // Check ball-player collisions
+                this.checkBallPlayerCollisions();
+                
+                // Boundary collisions
+                if (this.ballPosition.x < 12.5) {
+                    this.ballPosition.x = 12.5;
+                    this.ballVelocity.x = -this.ballVelocity.x * 0.8;
+                }
+                if (this.ballPosition.x > this.fieldWidth - 12.5) {
+                    this.ballPosition.x = this.fieldWidth - 12.5;
+                    this.ballVelocity.x = -this.ballVelocity.x * 0.8;
+                }
+                if (this.ballPosition.y < 12.5) {
+                    this.ballPosition.y = 12.5;
+                    this.ballVelocity.y = -this.ballVelocity.y * 0.8;
+                }
+                if (this.ballPosition.y > this.fieldHeight - 12.5) {
+                    this.ballPosition.y = this.fieldHeight - 12.5;
+                    this.ballVelocity.y = -this.ballVelocity.y * 0.8;
+                }
+                
+                // Check for goals
+                this.checkGoal();
+                
+                // Update ball position
+                this.ball.style.left = (this.ballPosition.x - 12.5) + 'px';
+                this.ball.style.top = (this.ballPosition.y - 12.5) + 'px';
+                
+                // Check if ball stopped
+                if (Math.abs(this.ballVelocity.x) < 0.1 && Math.abs(this.ballVelocity.y) < 0.1) {
+                    this.isMoving = false;
+                    this.ball.classList.remove('moving');
+                    this.ballVelocity = { x: 0, y: 0 };
+                } else {
+                    requestAnimationFrame(() => this.animateBall());
+                }
+            }
+            
+            checkBallPlayerCollisions() {
+                const ballRadius = 12.5;
+                const playerRadius = 15;
+                const collisionDistance = ballRadius + playerRadius;
+                
+                // Check all players
+                const allPlayers = document.querySelectorAll('.player');
+                allPlayers.forEach(player => {
+                    const playerRect = player.getBoundingClientRect();
+                    const fieldRect = this.gameField.getBoundingClientRect();
+                    
+                    const playerX = (playerRect.left + playerRect.width/2) - fieldRect.left;
+                    const playerY = (playerRect.top + playerRect.height/2) - fieldRect.top;
+                    
+                    const distance = Math.sqrt(
+                        (this.ballPosition.x - playerX) ** 2 + 
+                        (this.ballPosition.y - playerY) ** 2
+                    );
+                    
+                    if (distance <= collisionDistance) {
+                        // Calculate bounce direction
+                        const bounceX = (this.ballPosition.x - playerX) / distance;
+                        const bounceY = (this.ballPosition.y - playerY) / distance;
+                        
+                        // Reflect velocity with some energy loss
+                        this.ballVelocity.x = bounceX * Math.abs(this.ballVelocity.x) * 0.7;
+                        this.ballVelocity.y = bounceY * Math.abs(this.ballVelocity.y) * 0.7;
+                        
+                        // Push ball away from player to prevent sticking
+                        this.ballPosition.x = playerX + bounceX * collisionDistance;
+                        this.ballPosition.y = playerY + bounceY * collisionDistance;
+                        
+                        this.playSound('kick');
+                    }
+                });
+            }
+            
+            checkGoal() {
+                // Left goal (red team scores)
+                if (this.ballPosition.x <= 20 && this.ballPosition.y >= 190 && this.ballPosition.y <= 310) {
+                    this.goal('red');
+                    return;
+                }
+                
+                // Right goal (blue team scores)
+                if (this.ballPosition.x >= this.fieldWidth - 20 && this.ballPosition.y >= 190 && this.ballPosition.y <= 310) {
+                    this.goal('blue');
+                    return;
+                }
+            }
+            
+            goal(team) {
+                this.score[team]++;
+                this.isMoving = false;
+                this.ballVelocity = { x: 0, y: 0 };
+                
+                // Show celebration
+                const teamName = team === 'blue' ? 'Blu' : 'Rosso';
+                document.getElementById('celebrationTitle').textContent = `🎉 GOAL ${teamName.toUpperCase()}! 🎉`;
+                document.getElementById('celebrationText').textContent = `Fantastico tiro della squadra ${teamName}!`;
+                document.getElementById('celebration').classList.add('show');
+                
+                this.playSound('goal');
+                this.updateUI();
+                
+                // Check for match end
+                if (this.score[team] >= this.maxGoals) {
+                    setTimeout(() => {
+                        this.endMatch(team);
+                    }, 3000);
+                } else {
+                    setTimeout(() => {
+                        this.resetAfterGoal();
+                    }, 2000);
+                }
+            }
+            
+            resetAfterGoal() {
+                this.setupPlayers();
+                this.resetBall();
+                this.currentTurn = 'blue';
+                this.updateUI();
+            }
+            
+            endMatch(winner) {
+                const winnerName = winner === 'blue' ? 'Blu' : 'Rosso';
+                document.getElementById('celebrationTitle').textContent = `🏆 VITTORIA ${winnerName.toUpperCase()}! 🏆`;
+                document.getElementById('celebrationText').textContent = `La squadra ${winnerName} ha vinto la partita!`;
+                
+                setTimeout(() => {
+                    this.resetGame();
+                }, 3000);
+            }
+            
+            resetGame() {
+                this.score = { blue: 0, red: 0 };
+                this.currentTurn = 'blue';
+                this.setupPlayers();
+                this.resetBall();
+                this.updateUI();
+                this.closeCelebration();
+                
+                // Riapplica le selezioni delle squadre
+                setTimeout(() => {
+                    this.applyCurrentTeamSelections();
+                }, 100);
+            }
+            
+            applyCurrentTeamSelections() {
+                // Riapplica le selezioni correnti delle squadre
+                const blueSelect = document.getElementById('blueTeamSelect');
+                const redSelect = document.getElementById('redTeamSelect');
+                
+                if (blueSelect && blueSelect.value !== 'classic') {
+                    changeTeam('blue', blueSelect.value);
+                }
+                if (redSelect && redSelect.value !== 'classic') {
+                    changeTeam('red', redSelect.value);
+                }
+            }
+            
+            resetBall() {
+                this.ballPosition = { x: this.fieldWidth / 2, y: this.fieldHeight / 2 };
+                this.ballVelocity = { x: 0, y: 0 };
+                this.isMoving = false;
+                this.ball.classList.remove('moving');
+                this.ball.style.left = (this.ballPosition.x - 12.5) + 'px';
+                this.ball.style.top = (this.ballPosition.y - 12.5) + 'px';
+            }
+            
+            switchTurn() {
+                this.currentTurn = this.currentTurn === 'blue' ? 'red' : 'blue';
+                this.updateUI();
+            }
+            
+            clearSelection() {
+                this.gameField.querySelectorAll('.player.selected').forEach(p => {
+                    p.classList.remove('selected');
+                });
+            }
+            
+            updateUI() {
+                document.getElementById('blueScore').textContent = this.score.blue;
+                document.getElementById('redScore').textContent = this.score.red;
+                document.getElementById('currentTeam').textContent = this.currentTurn === 'blue' ? 'Blu' : 'Rosso';
+                
+                const indicator = document.getElementById('turnIndicator');
+                indicator.style.background = this.currentTurn === 'blue' ? 
+                    'linear-gradient(45deg, #4A90E2, #ffffff)' : 
+                    'linear-gradient(45deg, #E74C3C, #ffffff)';
+            }
+            
+            selectMode(mode) {
+                this.gameMode = mode;
+                
+                // Update mode buttons
+                document.querySelectorAll('.tool-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById(mode + 'Mode').classList.add('active');
+                
+                if (mode === 'skills') {
+                    this.startSkillsMode();
+                }
+            }
+            
+            startSkillsMode() {
+                // Apri la modalità rigori dedicata
+                document.getElementById('penaltyMode').style.display = 'flex';
+                resetPenalty();
+            }
+            
+            resizeField() {
+                const container = this.gameField;
+                const containerRect = container.getBoundingClientRect();
+                
+                if (window.innerWidth <= 768) {
+                    this.fieldWidth = Math.min(containerRect.width, 700);
+                    this.fieldHeight = this.fieldWidth * 0.625; // Maintain aspect ratio
+                    container.style.width = this.fieldWidth + 'px';
+                    container.style.height = this.fieldHeight + 'px';
+                }
+            }
+            
+            playSound(type) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    switch (type) {
+                        case 'kick':
+                            this.playTone(audioContext, 200, 0.1);
+                            break;
+                        case 'goal':
+                            const goalNotes = [523, 659, 784, 1047];
+                            goalNotes.forEach((note, i) => {
+                                setTimeout(() => this.playTone(audioContext, note, 0.3), i * 200);
+                            });
+                            break;
+                        case 'move':
+                            this.playTone(audioContext, 300, 0.05);
+                            break;
+                    }
+                } catch (e) {
+                    // Ignore audio errors
+                }
+            }
+            
+            playTone(audioContext, frequency, duration) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            }
+        }
+        
+        // Initialize game
+        let game = new DigitalSubbuteo();
+        
+        function selectMode(mode) {
+            game.selectMode(mode);
+        }
+        
+        function resetGame() {
+            game.resetGame();
+        }
+        
+        function closeCelebration() {
+            document.getElementById('celebration').classList.remove('show');
+        }
+        
+        // Team management functions
+        const teamConfigs = {
+            classic: { name: 'Classico', color1: '#4A90E2', color2: '#2E5C8A' },
+            inter: { name: 'Inter', color1: '#001F3F', color2: '#0074D9' },
+            italia: { name: 'Italia', color1: '#001F3F', color2: '#FFFFFF' },
+            inghilterra: { name: 'Inghilterra', color1: '#FFFFFF', color2: '#DC143C' },
+            chelsea: { name: 'Chelsea', color1: '#001F3F', color2: '#4169E1' },
+            manchester: { name: 'Man City', color1: '#87CEEB', color2: '#001F3F' },
+            milan: { name: 'Milan', color1: '#DC143C', color2: '#000000' }
+        };
+        
+        // Penalty mode variables
+        let penaltyState = {
+            goalkeeperChoice: null,
+            shooterChoice: null,
+            phase: 'goalkeeper' // 'goalkeeper', 'shooter', 'execute'
+        };
+        
+        function changeTeam(color, teamType) {
+            const customDiv = document.getElementById(color + 'CustomTeam');
+            
+            if (teamType === 'custom') {
+                customDiv.style.display = 'block';
+            } else {
+                customDiv.style.display = 'none';
+                const config = teamConfigs[teamType];
+                if (config) {
+                    applyTeamColors(color, config.color1, config.color2, config.name);
+                }
+            }
+        }
+        
+        function applyCustomTeam(color) {
+            const nameInput = document.getElementById(color + 'TeamName');
+            const color1Input = document.getElementById(color + 'Color1');
+            const color2Input = document.getElementById(color + 'Color2');
+            
+            const teamName = nameInput.value || 'Custom';
+            applyTeamColors(color, color1Input.value, color2Input.value, teamName);
+        }
+        
+        function applyTeamColors(playerColor, color1, color2, teamName) {
+            const players = document.querySelectorAll('.player.' + playerColor);
+            
+            players.forEach(player => {
+                player.style.background = `linear-gradient(45deg, ${color1}, ${color2})`;
+                
+                // Aggiungi effetto hover personalizzato
+                player.addEventListener('mouseenter', function() {
+                    this.style.boxShadow = `0 0 15px ${color1}`;
+                });
+                
+                player.addEventListener('mouseleave', function() {
+                    if (!this.classList.contains('selected')) {
+                        this.style.boxShadow = '';
+                    }
+                });
+            });
+            
+            console.log(`Squadra ${playerColor} cambiata in: ${teamName}`);
+        }
+        
+        // Penalty mode functions
+        function closePenaltyMode() {
+            document.getElementById('penaltyMode').style.display = 'none';
+        }
+        
+        function resetPenalty() {
+            penaltyState = {
+                goalkeeperChoice: null,
+                shooterChoice: null,
+                phase: 'goalkeeper'
+            };
+            
+            // Reset visual elements
+            document.querySelectorAll('.goal-section').forEach(section => {
+                section.className = 'goal-section';
+                section.onclick = handleGoalSectionClick;
+            });
+            
+            document.getElementById('penaltyGoalkeeper').style.transform = 'translateX(-50%)';
+            document.getElementById('penaltyBall').style.transform = 'translateX(-50%)';
+            
+            // Reset UI
+            updatePenaltyUI();
+        }
+        
+        function handleGoalSectionClick(event) {
+            const section = parseInt(event.target.dataset.section);
+            
+            if (penaltyState.phase === 'goalkeeper') {
+                penaltyState.goalkeeperChoice = section;
+                penaltyState.phase = 'shooter';
+                
+                // Visual feedback for goalkeeper choice
+                document.querySelectorAll('.goal-section').forEach(s => s.classList.remove('goalkeeper-choice'));
+                event.target.classList.add('goalkeeper-choice');
+                
+            } else if (penaltyState.phase === 'shooter') {
+                penaltyState.shooterChoice = section;
+                penaltyState.phase = 'execute';
+                
+                // Visual feedback for shooter choice
+                document.querySelectorAll('.goal-section').forEach(s => s.classList.remove('shooter-choice'));
+                event.target.classList.add('shooter-choice');
+            }
+            
+            updatePenaltyUI();
+        }
+        
+        function updatePenaltyUI() {
+            const phaseElement = document.getElementById('penaltyPhase');
+            const goalkeeperChoiceElement = document.getElementById('goalkeeperChoice');
+            const shooterChoiceElement = document.getElementById('shooterChoice');
+            const executeButton = document.getElementById('penaltyExecute');
+            
+            if (penaltyState.phase === 'goalkeeper') {
+                phaseElement.innerHTML = '<h3>Fase 1: Il portiere sceglie dove tuffarsi</h3><p>Portiere, clicca su una sezione della porta!</p>';
+                goalkeeperChoiceElement.textContent = 'Portiere: In attesa...';
+                shooterChoiceElement.textContent = 'Tiratore: In attesa...';
+                executeButton.style.display = 'none';
+            } else if (penaltyState.phase === 'shooter') {
+                phaseElement.innerHTML = '<h3>Fase 2: Il tiratore sceglie dove calciare</h3><p>Tiratore, clicca su una sezione della porta!</p>';
+                goalkeeperChoiceElement.textContent = `Portiere: Sezione ${penaltyState.goalkeeperChoice} ✅`;
+                goalkeeperChoiceElement.classList.add('selected');
+                shooterChoiceElement.textContent = 'Tiratore: In attesa...';
+                executeButton.style.display = 'none';
+            } else if (penaltyState.phase === 'execute') {
+                phaseElement.innerHTML = '<h3>Pronto per il calcio di rigore!</h3><p>Clicca il pulsante per vedere il risultato!</p>';
+                goalkeeperChoiceElement.textContent = `Portiere: Sezione ${penaltyState.goalkeeperChoice} ✅`;
+                shooterChoiceElement.textContent = `Tiratore: Sezione ${penaltyState.shooterChoice} ✅`;
+                shooterChoiceElement.classList.add('selected');
+                executeButton.style.display = 'inline-block';
+            }
+        }
+        
+        function executePenalty() {
+            const isGoal = penaltyState.goalkeeperChoice !== penaltyState.shooterChoice;
+            const goalkeeper = document.getElementById('penaltyGoalkeeper');
+            const ball = document.getElementById('penaltyBall');
+            
+            // Animazione del portiere
+            const goalkeeperPosition = getGoalkeeperPosition(penaltyState.goalkeeperChoice);
+            goalkeeper.style.transform = `translateX(${goalkeeperPosition}%)`;
+            
+            // Animazione della palla
+            const ballPosition = getBallPosition(penaltyState.shooterChoice);
+            ball.style.transform = `translateX(${ballPosition}%) translateY(-120px)`;
+            
+            // Risultato dopo l'animazione
+            setTimeout(() => {
+                if (isGoal) {
+                    alert('🎉 GOOOOOL! 🎉\nLa palla è entrata in rete!');
+                } else {
+                    alert('🥅 PARATA! 🥅\nIl portiere ha parato il rigore!');
+                }
+            }, 1000);
+        }
+        
+        function getGoalkeeperPosition(section) {
+            const positions = {
+                1: -75, 2: -25, 3: 25, 4: 75,
+                5: -75, 6: -25, 7: 25, 8: 75
+            };
+            return positions[section] || -50;
+        }
+        
+        function getBallPosition(section) {
+            const positions = {
+                1: -75, 2: -25, 3: 25, 4: 75,
+                5: -75, 6: -25, 7: 25, 8: 75
+            };
+            return positions[section] || -50;
+        }
+        
+        // Initialize goal sections
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.querySelectorAll('.goal-section').forEach(section => {
+                    section.onclick = handleGoalSectionClick;
+                });
+            }, 100);
+        });
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'r': case 'R': resetGame(); break;
+                case '1': selectMode('normal'); break;
+                case '2': selectMode('skills'); break;
+                case ' ': e.preventDefault(); break; // Prevent page scroll
+            }
+        });
+    </script>
+</body>
+</html>

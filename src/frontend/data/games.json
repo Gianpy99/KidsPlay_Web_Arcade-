@@ -85,6 +85,18 @@
             "skills": ["esplorazione", "apprendimento"],
             "difficulty_levels": ["easy", "normal"],
             "estimated_time": "10-20 min"
+        },
+        {
+            "id": "digital-subbuteo",
+            "title": "Digital Subbuteo",
+            "description": "Calcio da tavolo digitale - controlla i tuoi giocatori con drag & flick!",
+            "category": "adventure",
+            "icon": "⚽",
+            "min_age": 6,
+            "max_age": 12,
+            "skills": ["strategia", "coordinazione", "precisione"],
+            "difficulty_levels": ["easy", "normal", "hard"],
+            "estimated_time": "10-30 min"
         }
     ]
 }
