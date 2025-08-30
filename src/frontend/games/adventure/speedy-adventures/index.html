@@ -1010,9 +1010,10 @@
             }
             
             setupCanvas() {
-                // Use clientWidth/clientHeight to get inner dimensions (without border)
-                this.canvasWidth = this.canvas.clientWidth;
-                this.canvasHeight = this.canvas.clientHeight;
+                // Get canvas dimensions
+                const rect = this.canvas.getBoundingClientRect();
+                this.canvasWidth = rect.width;
+                this.canvasHeight = rect.height;
                 
                 // Set ground level
                 this.groundLevel = this.canvasHeight - 60;
@@ -2599,8 +2600,8 @@
             }, 6000);
         }
         
-        // Initialize game after DOM is loaded
-        let game = null;
+        // Initialize game
+        let game = new SpeedyAdventuresGame();
         
         // Touch controls for mobile
         function handleTouch(direction) {
@@ -2877,14 +2878,6 @@
         
         // Initialize user system when ready
         document.addEventListener('DOMContentLoaded', () => {
-            // Small delay to ensure CSS is fully loaded (reduced for performance)
-            setTimeout(() => {
-                // Initialize the game first
-                console.log('🎮 Starting Speedy Adventures game...');
-                game = new SpeedyAdventuresGame();
-                console.log('✅ Game initialized successfully');
-            }, 16);  // One frame delay (16ms) instead of 100ms
-            
             // Check if user manager is loaded
             if (typeof window.userManager !== 'undefined') {
                 window.userManager.initializeForPage();

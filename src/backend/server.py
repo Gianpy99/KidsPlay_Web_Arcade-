@@ -14,11 +14,10 @@ class KidsPlayHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header('Cross-Origin-Embedder-Policy', 'cross-origin')
         self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
-        # Light cache control for development - allow short cache for static assets
-        if self.path.endswith(('.js', '.css', '.png', '.svg', '.ico')):
-            self.send_header('Cache-Control', 'max-age=300')  # 5 minutes cache for assets
-        else:
-            self.send_header('Cache-Control', 'no-cache')  # No cache for HTML only
+        # Force no cache for development - clear all browser cache
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
         super().end_headers()
     
     def copyfile(self, source, outputfile):
