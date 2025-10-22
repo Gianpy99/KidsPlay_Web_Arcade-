@@ -18,13 +18,9 @@ class GeminiImageService {
      * @returns {Promise<string>} Base64 encoded PNG image data
      */
     async generateDinosaurImage(dinosaur) {
-        // Check cache first
-        const cached = this.getCachedImage(dinosaur.id);
-        if (cached) {
-            console.log(`📦 Using cached image for ${dinosaur.name}`);
-            return cached;
-        }
-
+        // DON'T use localStorage cache - it's too small for PNG images
+        // Instead, we'll save generated images as downloadable files
+        
         // Check API configuration
         if (!GameConfig.isApiConfigured()) {
             console.warn('⚠️ Gemini API not configured');
@@ -40,9 +36,11 @@ class GeminiImageService {
             const imageData = await this.callGeminiAPI(prompt);
             
             if (imageData) {
-                // Cache the result
-                this.cacheImage(dinosaur.id, imageData);
-                console.log(`✅ Generated and cached image for ${dinosaur.name}`);
+                console.log(`✅ Generated image for ${dinosaur.name}`);
+                
+                // Auto-download the image for future use
+                this.downloadImage(imageData, dinosaur.id);
+                
                 return imageData;
             }
 
@@ -50,6 +48,25 @@ class GeminiImageService {
         } catch (error) {
             console.error('❌ Error generating dinosaur image:', error);
             return null;
+        }
+    }
+    
+    /**
+     * Download generated image as PNG file
+     * User can save it and upload it to assets/dinosaurs/ folder
+     */
+    downloadImage(base64Data, dinosaurId) {
+        try {
+            const link = document.createElement('a');
+            link.href = 'data:image/png;base64,' + base64Data;
+            link.download = `${dinosaurId}.png`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            console.log(`💾 Downloaded ${dinosaurId}.png - Save it to assets/dinosaurs/ folder`);
+        } catch (error) {
+            console.error('Error downloading image:', error);
         }
     }
 
