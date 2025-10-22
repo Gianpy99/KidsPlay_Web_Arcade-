@@ -2,12 +2,14 @@
  * Gemini Image Generation Service
  * Handles AI-generated dinosaur images using Google Gemini 2.5 Flash Image API
  * Based on seasonal_quest_app implementation pattern
+ * 
+ * Images are persisted in localStorage for 30 days to maintain consistency across sessions
  */
 
 class GeminiImageService {
     constructor() {
         this.storagePrefix = 'dino_image_';
-        this.cacheExpiry = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+        this.cacheExpiry = 30 * 24 * 60 * 60 * 1000; // 30 days - images persist across sessions
     }
 
     /**

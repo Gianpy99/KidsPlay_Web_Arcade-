@@ -11,8 +11,8 @@ const GameConfig = {
     // Gemini API Configuration
     geminiApiKey: 'YOUR_GEMINI_API_KEY_HERE', // ⚠️ NEVER commit real API keys! Add to .gitignore
     
-    // Imagen 3 API endpoint (correct model for image generation)
-    geminiApiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:generate',
+    // Gemini 2.5 Flash Image API endpoint (same as seasonal_quest_app)
+    geminiApiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent',
     
     // Game Settings
     enableAIImages: false, // Auto-enabled if API key is configured
