@@ -238,6 +238,12 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            transition: all 0.3s ease;
+        }
+        .discovery-item:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(149, 225, 211, 0.3);
         }
         .discovery-icon {
             font-size: 1.5rem;
@@ -1154,7 +1160,9 @@
                     const allDinos = this.getAllDinosaurs();
                     const discovered = allDinos.filter(d => this.discoveredDinos.has(d.id));
                     list.innerHTML = discovered.map(dino => 
-                        '<div class="discovery-item">' +
+                        '<div class="discovery-item" onclick="game.showDinoModal(' + 
+                        'game.getAllDinosaurs().find(d => d.id === \'' + dino.id + '\'))" ' +
+                        'style="cursor: pointer;" title="Clicca per vedere i dettagli">' +
                         '<span class="discovery-icon">' + this.getDinoEmoji(dino.type) + '</span>' +
                         '<span class="discovery-name">' + dino.name + '</span>' +
                         '</div>'
