@@ -108,3 +108,4 @@ assets/game/fonts/
 *.7z
 *.bak
 *.old
+src/frontend/games/adventure/dino-explorer/game-config.js

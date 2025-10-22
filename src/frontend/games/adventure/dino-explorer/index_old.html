@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦕 Dino Explorer - KidsPlay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', cursive, sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 50%, #F0E68C 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #2c3e50;
+        }
+        
+        /* Header */
+        .game-header {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .game-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .game-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        /* Main Game Container */
+        .game-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+            padding: 0 20px;
+        }
+        
+        /* Game World */
+        .game-world {
+            flex: 2;
+            height: 600px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 40%, #228B22 100%);
+            border: 4px solid #8B4513;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        /* Player Character */
+        .player {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            border-radius: 50%;
+            border: 3px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            transition: all 0.3s ease;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            left: 50px;
+            top: 50px;
+        }
+        
+        .player.moving {
+            animation: playerBounce 0.5s ease;
+        }
+        
+        /* Wild Dinosaurs */
+        .wild-dinosaur {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            border: 3px solid #4ECDC4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 5;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .wild-dinosaur:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
+        }
+        
+        .wild-dinosaur img {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+        }
+        
+        /* Sidebar UI */
+        .game-sidebar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        /* Dinosaur-dex */
+        .dinosaur-dex {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .dinosaur-dex h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+        
+        .dino-entry {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .dino-entry.discovered {
+            border-color: #4ECDC4;
+            background: linear-gradient(45deg, #E8F8F5, #F0FFF4);
+        }
+        
+        .dino-entry.undiscovered {
+            opacity: 0.5;
+            border-color: #ccc;
+        }
+        
+        .dino-entry img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        
+        .dino-info h4 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        .dino-info p {
+            margin: 5px 0 0 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        /* Controls */
+        .game-controls {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .control-btn {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Stats Panel */
+        .stats-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        /* Discovery Modal */
+        .discovery-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .discovery-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .discovery-content img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            margin-bottom: 20px;
+        }
+        
+        .discovery-content h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .discovery-content p {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .close-btn {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        
+        /* Animations */
+        @keyframes playerBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes dinoWiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+        
+        .wild-dinosaur:hover {
+            animation: dinoWiggle 0.5s ease;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+            }
+            
+            .game-world {
+                height: 400px;
+            }
+            
+            .game-header h1 {
+                font-size: 2rem;
+            }
+        }
+        
+        /* Hidden by default */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-header">
+        <h1>🦕 DINO EXPLORER 🦖</h1>
+        <p>Esplora il mondo preistorico e scopri tutti i dinosauri!</p>
+    </div>
+    
+    <div class="game-container">
+        <!-- Main Game World -->
+        <div class="game-world" id="gameWorld">
+            <!-- Player Character -->
+            <div class="player" id="player">🧭</div>
+            
+            <!-- Wild Dinosaurs will be spawned here by JavaScript -->
+        </div>
+        
+        <!-- Sidebar UI -->
+        <div class="game-sidebar">
+            <!-- Dinosaur-dex -->
+            <div class="dinosaur-dex">
+                <h3>📖 Dinosaur-dex</h3>
+                <div id="dinosaurList">
+                    <!-- Dinosaur entries will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Game Controls -->
+            <div class="game-controls">
+                <h3>🎮 Controlli</h3>
+                <p>Usa WASD o le frecce per muoverti!</p>
+                <div class="controls-grid">
+                    <button class="control-btn" onclick="movePlayer('up')">⬆️</button>
+                    <button class="control-btn" onclick="movePlayer('left')">⬅️</button>
+                    <button class="control-btn" onclick="movePlayer('right')">➡️</button>
+                    <button class="control-btn" onclick="movePlayer('down')">⬇️</button>
+                    <button class="control-btn" onclick="changeHabitat()">🌍 Cambia Zona</button>
+                    <button class="control-btn" onclick="resetGame()">🔄 Reset</button>
+                </div>
+            </div>
+            
+            <!-- Player Stats -->
+            <div class="stats-panel">
+                <h3>📊 Le Tue Statistiche</h3>
+                <div class="stat-item">
+                    <span>Dinosauri Scoperti:</span>
+                    <span id="discoveredCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Zona Attuale:</span>
+                    <span id="currentHabitat">Foresta</span>
+                </div>
+                <div class="stat-item">
+                    <span>Passi Compiuti:</span>
+                    <span id="stepCount">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Discovery Modal -->
+    <div class="discovery-modal hidden" id="discoveryModal">
+        <div class="discovery-content">
+            <img id="discoveredDinoImage" src="" alt="">
+            <h2 id="discoveredDinoName">Nuovo Dinosauro!</h2>
+            <p id="discoveredDinoDescription">Hai scoperto un nuovo dinosauro!</p>
+            <button class="close-btn" onclick="closeDiscoveryModal()">Fantastico! 🎉</button>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="dinosaur-database.js"></script>
+    <script>
+        // 🎮 Game State
+        let gameState = {
+            playerPosition: { x: 50, y: 50 },
+            currentHabitat: 'forest',
+            discoveredDinosaurs: new Set(),
+            stepCount: 0,
+            wildDinosaurs: []
+        };
+        
+        // 🎯 Game Elements
+        const player = document.getElementById('player');
+        const gameWorld = document.getElementById('gameWorld');
+        const discoveryModal = document.getElementById('discoveryModal');
+        
+        // 🚀 Initialize Game
+        function initGame() {
+            console.log('🦕 Initializing Dino Explorer...');
+            
+            // Set player position
+            updatePlayerPosition();
+            
+            // Populate Dinosaur-dex
+            populateDinosaurDex();
+            
+            // Spawn initial wild dinosaurs
+            spawnWildDinosaurs();
+            
+            // Update UI
+            updateUI();
+            
+            // Setup keyboard controls
+            setupKeyboardControls();
+            
+            console.log('✅ Game initialized!');
+        }
+        
+        // 🚶 Player Movement
+        function movePlayer(direction) {
+            const speed = 60;
+            let newX = gameState.playerPosition.x;
+            let newY = gameState.playerPosition.y;
+            
+            switch(direction) {
+                case 'up':
+                    newY = Math.max(20, newY - speed);
+                    break;
+                case 'down':
+                    newY = Math.min(520, newY + speed);
+                    break;
+                case 'left':
+                    newX = Math.max(20, newX - speed);
+                    break;
+                case 'right':
+                    newX = Math.min(720, newX + speed);
+                    break;
+            }
+            
+            // Update position
+            gameState.playerPosition.x = newX;
+            gameState.playerPosition.y = newY;
+            gameState.stepCount++;
+            
+            // Animate player
+            player.classList.add('moving');
+            setTimeout(() => player.classList.remove('moving'), 500);
+            
+            // Update player visual position
+            updatePlayerPosition();
+            
+            // Check for random encounters
+            checkForEncounters();
+            
+            // Update UI
+            updateUI();
+        }
+        
+        function updatePlayerPosition() {
+            player.style.left = gameState.playerPosition.x + 'px';
+            player.style.top = gameState.playerPosition.y + 'px';
+        }
+        
+        // 🎲 Random Encounters
+        function checkForEncounters() {
+            // 15% chance of encounter per movement
+            if (Math.random() < 0.15) {
+                const encounter = DinosaurUtils.generateRandomEncounter(gameState.currentHabitat);
+                if (encounter && !gameState.discoveredDinosaurs.has(encounter.id)) {
+                    discoverDinosaur(encounter);
+                }
+            }
+        }
+        
+        // 🦕 Wild Dinosaur Management
+        function spawnWildDinosaurs() {
+            // Clear existing wild dinosaurs
+            gameState.wildDinosaurs.forEach(dino => {
+                if (dino.element && dino.element.parentNode) {
+                    dino.element.parentNode.removeChild(dino.element);
+                }
+            });
+            gameState.wildDinosaurs = [];
+            
+            // Spawn 3-5 wild dinosaurs
+            const spawnCount = 3 + Math.floor(Math.random() * 3);
+            const habitatDinos = DinosaurUtils.getByHabitat(gameState.currentHabitat);
+            
+            for (let i = 0; i < spawnCount && habitatDinos.length > 0; i++) {
+                const randomDino = habitatDinos[Math.floor(Math.random() * habitatDinos.length)];
+                spawnWildDinosaur(randomDino);
+            }
+        }
+        
+        function spawnWildDinosaur(dinosaur) {
+            const dinoElement = document.createElement('div');
+            dinoElement.className = 'wild-dinosaur';
+            dinoElement.onclick = () => encounterWildDinosaur(dinosaur);
+            
+            // Position randomly but not too close to player
+            let x, y;
+            do {
+                x = 100 + Math.random() * 600;
+                y = 100 + Math.random() * 400;
+            } while (Math.abs(x - gameState.playerPosition.x) < 100 && 
+                     Math.abs(y - gameState.playerPosition.y) < 100);
+            
+            dinoElement.style.left = x + 'px';
+            dinoElement.style.top = y + 'px';
+            
+            // Add dinosaur image
+            const img = document.createElement('img');
+            img.src = dinosaur.image;
+            img.alt = dinosaur.name;
+            img.onerror = () => {
+                // Fallback if image doesn't load
+                dinoElement.innerHTML = '🦕';
+                dinoElement.style.fontSize = '3rem';
+            };
+            dinoElement.appendChild(img);
+            
+            gameWorld.appendChild(dinoElement);
+            
+            gameState.wildDinosaurs.push({
+                dinosaur: dinosaur,
+                element: dinoElement,
+                position: { x, y }
+            });
+        }
+        
+        // 🔍 Discovery System
+        function encounterWildDinosaur(dinosaur) {
+            if (!gameState.discoveredDinosaurs.has(dinosaur.id)) {
+                discoverDinosaur(dinosaur);
+            } else {
+                // Already discovered - show info
+                showDinosaurInfo(dinosaur);
+            }
+        }
+        
+        function discoverDinosaur(dinosaur) {
+            gameState.discoveredDinosaurs.add(dinosaur.id);
+            
+            // Show discovery modal
+            document.getElementById('discoveredDinoImage').src = dinosaur.image;
+            document.getElementById('discoveredDinoName').textContent = `Nuovo! ${dinosaur.name}`;
+            document.getElementById('discoveredDinoDescription').textContent = dinosaur.description;
+            
+            discoveryModal.classList.remove('hidden');
+            
+            // Update Dinosaur-dex
+            updateDinosaurDex();
+            updateUI();
+            
+            // Play sound (simple audio feedback)
+            playDiscoverySound();
+        }
+        
+        function showDinosaurInfo(dinosaur) {
+            document.getElementById('discoveredDinoImage').src = dinosaur.image;
+            document.getElementById('discoveredDinoName').textContent = dinosaur.name;
+            document.getElementById('discoveredDinoDescription').innerHTML = `
+                <strong>${dinosaur.scientificName}</strong><br>
+                ${dinosaur.description}<br><br>
+                <strong>Periodo:</strong> ${dinosaur.period}<br>
+                <strong>Habitat:</strong> ${dinosaur.habitat.join(', ')}<br>
+                <strong>Tipo:</strong> ${dinosaur.type}<br>
+                <strong>Rarità:</strong> ${RaritySystem[dinosaur.rarity].name}
+            `;
+            
+            discoveryModal.classList.remove('hidden');
+        }
+        
+        function closeDiscoveryModal() {
+            discoveryModal.classList.add('hidden');
+        }
+        
+        // 📖 Dinosaur-dex Management
+        function populateDinosaurDex() {
+            const dinosaurList = document.getElementById('dinosaurList');
+            const allDinosaurs = DinosaurUtils.getAllDinosaurs();
+            
+            dinosaurList.innerHTML = '';
+            
+            allDinosaurs.forEach(dinosaur => {
+                const entry = document.createElement('div');
+                entry.className = 'dino-entry undiscovered';
+                entry.id = `dex-${dinosaur.id}`;
+                
+                const img = document.createElement('img');
+                img.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="%23ddd"/><text x="25" y="30" text-anchor="middle" fill="%23999">?</text></svg>';
+                
+                const info = document.createElement('div');
+                info.className = 'dino-info';
+                info.innerHTML = `
+                    <h4>???</h4>
+                    <p>Tipo: ${dinosaur.type}</p>
+                `;
+                
+                entry.appendChild(img);
+                entry.appendChild(info);
+                dinosaurList.appendChild(entry);
+            });
+        }
+        
+        function updateDinosaurDex() {
+            const allDinosaurs = DinosaurUtils.getAllDinosaurs();
+            
+            allDinosaurs.forEach(dinosaur => {
+                const entry = document.getElementById(`dex-${dinosaur.id}`);
+                if (entry && gameState.discoveredDinosaurs.has(dinosaur.id)) {
+                    entry.className = 'dino-entry discovered';
+                    
+                    const img = entry.querySelector('img');
+                    img.src = dinosaur.image;
+                    
+                    const info = entry.querySelector('.dino-info');
+                    info.innerHTML = `
+                        <h4>${dinosaur.name}</h4>
+                        <p>${RaritySystem[dinosaur.rarity].name} • ${dinosaur.type}</p>
+                    `;
+                    
+                    entry.onclick = () => showDinosaurInfo(dinosaur);
+                }
+            });
+        }
+        
+        // 🌍 Habitat Management
+        function changeHabitat() {
+            const habitats = Object.keys(HabitatConfig);
+            const currentIndex = habitats.indexOf(gameState.currentHabitat);
+            const nextIndex = (currentIndex + 1) % habitats.length;
+            
+            gameState.currentHabitat = habitats[nextIndex];
+            
+            // Update world background
+            const config = HabitatConfig[gameState.currentHabitat];
+            gameWorld.style.background = config.background;
+            
+            // Respawn wild dinosaurs
+            spawnWildDinosaurs();
+            
+            updateUI();
+        }
+        
+        // 🎮 Controls
+        function setupKeyboardControls() {
+            document.addEventListener('keydown', (e) => {
+                switch(e.key.toLowerCase()) {
+                    case 'w':
+                    case 'arrowup':
+                        e.preventDefault();
+                        movePlayer('up');
+                        break;
+                    case 's':
+                    case 'arrowdown':
+                        e.preventDefault();
+                        movePlayer('down');
+                        break;
+                    case 'a':
+                    case 'arrowleft':
+                        e.preventDefault();
+                        movePlayer('left');
+                        break;
+                    case 'd':
+                    case 'arrowright':
+                        e.preventDefault();
+                        movePlayer('right');
+                        break;
+                    case ' ':
+                        e.preventDefault();
+                        changeHabitat();
+                        break;
+                }
+            });
+        }
+        
+        // 🔊 Audio
+        function playDiscoverySound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const notes = [523, 659, 784, 1047]; // C, E, G, C
+                
+                notes.forEach((note, index) => {
+                    setTimeout(() => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.value = note;
+                        oscillator.type = 'sine';
+                        
+                        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                        
+                        oscillator.start(audioContext.currentTime);
+                        oscillator.stop(audioContext.currentTime + 0.3);
+                    }, index * 100);
+                });
+            } catch (e) {
+                console.log('Audio not available');
+            }
+        }
+        
+        // 🔄 Game Management
+        function resetGame() {
+            if (confirm('Sei sicuro di voler ricominciare da capo?')) {
+                gameState = {
+                    playerPosition: { x: 50, y: 50 },
+                    currentHabitat: 'forest',
+                    discoveredDinosaurs: new Set(),
+                    stepCount: 0,
+                    wildDinosaurs: []
+                };
+                
+                initGame();
+            }
+        }
+        
+        function updateUI() {
+            document.getElementById('discoveredCount').textContent = 
+                `${gameState.discoveredDinosaurs.size}/${DinosaurUtils.getAllDinosaurs().length}`;
+            
+            document.getElementById('currentHabitat').textContent = 
+                HabitatConfig[gameState.currentHabitat].name;
+            
+            document.getElementById('stepCount').textContent = gameState.stepCount;
+        }
+        
+        // 🎯 Start Game
+        document.addEventListener('DOMContentLoaded', initGame);
+        
+        // 🌟 Success message for development
+        console.log('🦕 Dino Explorer loaded successfully!');
+    </script>
+</body>
+</html>
+        
+        .fossil.found {
+            animation: fossil-collect 0.6s ease forwards;
+        }
+        
+        .plant {
+            position: absolute;
+            font-size: 2rem;
+            z-index: 3;
+            animation: sway 4s ease-in-out infinite;
+        }
+        
+        .rock {
+            position: absolute;
+            width: 60px;
+            height: 40px;
+            background: linear-gradient(45deg, #696969, #808080);
+            border-radius: 20px;
+            z-index: 2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .volcano {
+            position: absolute;
+            width: 100px;
+            height: 80px;
+            background: linear-gradient(45deg, #8B4513, #A0522D);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            z-index: 2;
+            animation: volcano-smoke 6s ease-in-out infinite;
+        }
+        
+        .water {
+            position: absolute;
+            background: linear-gradient(45deg, #4169E1, #1E90FF);
+            border-radius: 50%;
+            z-index: 1;
+            animation: water-ripple 4s ease-in-out infinite;
+        }
+        
+        .cloud {
+            position: absolute;
+            font-size: 2.5rem;
+            color: white;
+            z-index: 1;
+            animation: cloud-drift 8s linear infinite;
+        }
+        
+        .discovery-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 10px;
+            width: 200px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            color: #2c3e50;
+        }
+        
+        .discovery-panel h3 {
+            margin: 0 0 10px 0;
+            color: #8B4513;
+        }
+        
+        .discovery-list {
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+        }
+        
+        .discovery-item {
+            margin: 5px 0;
+            padding: 5px;
+            background: rgba(139, 69, 19, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid #8B4513;
+        }
+        
+        .fact-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.98);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            color: #2c3e50;
+            max-width: 500px;
+            border: 3px solid #8B4513;
+        }
+        
+        .fact-popup h3 {
+            color: #8B4513;
+            margin-bottom: 15px;
+        }
+        
+        .fact-popup img {
+            width: 80px;
+            height: 80px;
+            margin: 10px 0;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #32CD32, #228B22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 0 auto 15px auto;
+        }
+        
+        .game-stats {
+            display: flex;
+            gap: 20px;
+            margin: 10px 0;
+            color: white;
+            font-size: 1.1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .stat-item {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .back-button:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .close-popup {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 15px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        .close-popup:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+        
+        .achievement {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #2c3e50;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            z-index: 999;
+            animation: achievement-slide 0.5s ease;
+            max-width: 250px;
+        }
+        
+        .achievement h4 {
+            margin: 0 0 5px 0;
+        }
+        
+        .exploration-mode {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 10px;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        
+        .mode-button {
+            background: #FF9800;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-left: 10px;
+            font-family: inherit;
+        }
+        
+        @keyframes walk {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        @keyframes fossil-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(139, 69, 19, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(139, 69, 19, 0.8); }
+        }
+        
+        @keyframes fossil-excited {
+            0%, 100% { transform: scale(1.2); }
+            50% { transform: scale(1.4); }
+        }
+        
+        @keyframes fossil-collect {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        
+        @keyframes sway {
+            0%, 100% { transform: rotate(-2deg); }
+            50% { transform: rotate(2deg); }
+        }
+        
+        @keyframes volcano-smoke {
+            0%, 100% { box-shadow: 0 -10px 20px rgba(105, 105, 105, 0.3); }
+            50% { box-shadow: 0 -20px 30px rgba(105, 105, 105, 0.6); }
+        }
+        
+        @keyframes water-ripple {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 0.6; }
+        }
+        
+        @keyframes cloud-drift {
+            0% { transform: translateX(-50px); }
+            100% { transform: translateX(calc(100vw + 50px)); }
+        }
+        
+        @keyframes achievement-slide {
+            0% { transform: translateX(100%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .game-world {
+                height: 400px;
+                margin: 0 10px;
+            }
+            
+            .discovery-panel {
+                position: relative;
+                width: 90%;
+                margin: 10px auto 0;
+                top: 0;
+                right: 0;
+            }
+            
+            .dino-character {
+                width: 40px;
+                height: 40px;
+                font-size: 1.5rem;
+            }
+            
+            .fossil {
+                width: 30px;
+                height: 30px;
+                font-size: 1.2rem;
+            }
+            
+            .fact-popup {
+                margin: 20px;
+                padding: 1.5rem;
+                max-width: 90%;
+            }
+            
+            .game-header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../../../index.html" class="back-button">
+        ← Torna ai Giochi
+    </a>
+    
+    <div class="game-header">
+        <h1>🦕 Dino Explorer</h1>
+        <div class="controls-info">
+            <p><strong>Esplora il mondo preistorico!</strong> Clicca sui fossili per scoprire i dinosauri!</p>
+            <p>Muovi il personaggio e trova tutti i tesori nascosti!</p>
+        </div>
+    </div>
+    
+    <div class="game-stats">
+        <div class="stat-item">
+            🦴 Fossili: <span id="fossils">0</span>/10
+        </div>
+        <div class="stat-item">
+            🏆 Scoperte: <span id="discoveries">0</span>
+        </div>
+        <div class="stat-item">
+            ⭐ Punti: <span id="score">0</span>
+        </div>
+        <div class="stat-item">
+            ⏰ Tempo: <span id="time">00:00</span>
+        </div>
+    </div>
+    
+    <div class="game-world" id="gameWorld">
+        <div class="dino-character" id="dinoCharacter">😊</div>
+        
+        <!-- Discovery panel for mobile -->
+        <div class="discovery-panel" id="discoveryPanel">
+            <h3>🔍 Scoperte</h3>
+            <div class="discovery-list" id="discoveryList">
+                <p>Trova i fossili per scoprire i dinosauri!</p>
+            </div>
+        </div>
+        
+        <!-- Background elements will be generated -->
+    </div>
+    
+    <div class="exploration-mode">
+        <span>Modalità: <strong id="currentMode">Esplorazione Libera</strong></span>
+        <button class="mode-button" onclick="toggleMode()" id="modeToggle">🎯 Missioni</button>
+    </div>
+    
+    <div class="fact-popup" id="factPopup">
+        <div class="fact-popup img" id="dinoIcon">🦕</div>
+        <h3 id="dinoName">Tirannosauro Rex</h3>
+        <p id="dinoFact">Il T-Rex era uno dei dinosauri carnivori più grandi mai esistiti!</p>
+        <p id="dinoDetails">Viveva nel Cretaceo e aveva denti lunghi fino a 20 cm!</p>
+        <button class="close-popup" onclick="closeFact()">Fantastico! 🌟</button>
+    </div>
+    
+    <div class="achievement" id="achievement">
+        <h4>🏆 Obiettivo Raggiunto!</h4>
+        <p id="achievementText">Hai trovato il tuo primo fossile!</p>
+    </div>
+
+    <script>
+        class DinoExplorerGame {
+            constructor() {
+                this.gameWorld = document.getElementById('gameWorld');
+                this.dinoCharacter = document.getElementById('dinoCharacter');
+                this.worldWidth = 0;
+                this.worldHeight = 0;
+                
+                this.gameState = {
+                    fossilsFound: 0,
+                    totalFossils: 10,
+                    discoveries: 0,
+                    score: 0,
+                    startTime: Date.now(),
+                    mode: 'explore', // 'explore' or 'mission'
+                    currentMission: null
+                };
+                
+                this.player = {
+                    x: 100,
+                    y: 300,
+                    moving: false
+                };
+                
+                this.fossils = [];
+                this.discoveries = [];
+                this.achievements = [];
+                
+                this.dinoData = [
+                    {
+                        name: "Tirannosauro Rex",
+                        icon: "🦖",
+                        fact: "Il T-Rex era uno dei dinosauri carnivori più grandi mai esistiti!",
+                        details: "Viveva nel Cretaceo e aveva denti lunghi fino a 20 cm!",
+                        period: "Cretaceo",
+                        diet: "Carnivoro"
+                    },
+                    {
+                        name: "Triceratopo",
+                        icon: "🦕",
+                        fact: "Il Triceratopo aveva tre corna e un grande collare osseo!",
+                        details: "Mangiava piante e poteva pesare fino a 12 tonnellate!",
+                        period: "Cretaceo",
+                        diet: "Erbivoro"
+                    },
+                    {
+                        name: "Brontosauro",
+                        icon: "🦴",
+                        fact: "Il Brontosauro era uno dei dinosauri più lunghi!",
+                        details: "Poteva raggiungere i 22 metri di lunghezza!",
+                        period: "Giurassico",
+                        diet: "Erbivoro"
+                    },
+                    {
+                        name: "Velociraptor",
+                        icon: "🐉",
+                        fact: "I Velociraptor erano dinosauri molto intelligenti!",
+                        details: "Cacciavano in gruppo e avevano artigli affilati!",
+                        period: "Cretaceo",
+                        diet: "Carnivoro"
+                    },
+                    {
+                        name: "Stegosauro",
+                        icon: "🦕",
+                        fact: "Lo Stegosauro aveva placche ossee sulla schiena!",
+                        details: "La sua coda aveva quattro spine per difendersi!",
+                        period: "Giurassico",
+                        diet: "Erbivoro"
+                    },
+                    {
+                        name: "Pteranodon",
+                        icon: "🪶",
+                        fact: "Il Pteranodon era un rettile volante, non un dinosauro!",
+                        details: "Aveva un'apertura alare di oltre 6 metri!",
+                        period: "Cretaceo",
+                        diet: "Piscivoro"
+                    },
+                    {
+                        name: "Brachiosauro",
+                        icon: "🦴",
+                        fact: "Il Brachiosauro era alto come un palazzo di 4 piani!",
+                        details: "Mangiava le foglie degli alberi più alti!",
+                        period: "Giurassico",
+                        diet: "Erbivoro"
+                    },
+                    {
+                        name: "Allosaurus",
+                        icon: "🦖",
+                        fact: "L'Allosaurus era un feroce predatore del Giurassico!",
+                        details: "Aveva denti seghettati perfetti per tagliare la carne!",
+                        period: "Giurassico",
+                        diet: "Carnivoro"
+                    },
+                    {
+                        name: "Ankylosaurus",
+                        icon: "🛡️",
+                        fact: "L'Ankylosaurus era coperto di armature ossee!",
+                        details: "Aveva una mazza pesante alla fine della coda!",
+                        period: "Cretaceo",
+                        diet: "Erbivoro"
+                    },
+                    {
+                        name: "Parasaurolophus",
+                        icon: "🎺",
+                        fact: "Il Parasaurolophus poteva emettere suoni con la sua cresta!",
+                        details: "Usava i suoni per comunicare con il branco!",
+                        period: "Cretaceo",
+                        diet: "Erbivoro"
+                    }
+                ];
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupWorld();
+                this.createEnvironment();
+                this.placeFossils();
+                this.setupControls();
+                this.startTimer();
+                this.updateUI();
+            }
+            
+            setupWorld() {
+                const rect = this.gameWorld.getBoundingClientRect();
+                this.worldWidth = rect.width;
+                this.worldHeight = rect.height;
+                
+                // Position character
+                this.dinoCharacter.style.left = this.player.x + 'px';
+                this.dinoCharacter.style.top = this.player.y + 'px';
+            }
+            
+            createEnvironment() {
+                // Add clouds
+                for (let i = 0; i < 4; i++) {
+                    const cloud = document.createElement('div');
+                    cloud.className = 'cloud';
+                    cloud.textContent = '☁️';
+                    cloud.style.left = Math.random() * this.worldWidth + 'px';
+                    cloud.style.top = Math.random() * 100 + 20 + 'px';
+                    cloud.style.animationDelay = Math.random() * 5 + 's';
+                    this.gameWorld.appendChild(cloud);
+                }
+                
+                // Add plants
+                const plantTypes = ['🌿', '🌱', '🍃', '🌾', '🌵'];
+                for (let i = 0; i < 15; i++) {
+                    const plant = document.createElement('div');
+                    plant.className = 'plant';
+                    plant.textContent = plantTypes[Math.floor(Math.random() * plantTypes.length)];
+                    plant.style.left = Math.random() * (this.worldWidth - 50) + 'px';
+                    plant.style.top = Math.random() * (this.worldHeight - 100) + 100 + 'px';
+                    plant.style.animationDelay = Math.random() * 4 + 's';
+                    this.gameWorld.appendChild(plant);
+                }
+                
+                // Add rocks
+                for (let i = 0; i < 8; i++) {
+                    const rock = document.createElement('div');
+                    rock.className = 'rock';
+                    rock.style.left = Math.random() * (this.worldWidth - 60) + 'px';
+                    rock.style.top = Math.random() * (this.worldHeight - 100) + 80 + 'px';
+                    this.gameWorld.appendChild(rock);
+                }
+                
+                // Add water bodies
+                for (let i = 0; i < 3; i++) {
+                    const water = document.createElement('div');
+                    water.className = 'water';
+                    water.style.width = 60 + Math.random() * 40 + 'px';
+                    water.style.height = 40 + Math.random() * 20 + 'px';
+                    water.style.left = Math.random() * (this.worldWidth - 100) + 'px';
+                    water.style.top = Math.random() * (this.worldHeight - 100) + 50 + 'px';
+                    this.gameWorld.appendChild(water);
+                }
+                
+                // Add volcano
+                const volcano = document.createElement('div');
+                volcano.className = 'volcano';
+                volcano.style.right = '50px';
+                volcano.style.bottom = '50px';
+                this.gameWorld.appendChild(volcano);
+            }
+            
+            placeFossils() {
+                for (let i = 0; i < this.gameState.totalFossils; i++) {
+                    let x, y, attempts = 0;
+                    let validPosition = false;
+                    
+                    // Find a valid position that doesn't overlap with other elements
+                    while (!validPosition && attempts < 50) {
+                        x = 80 + Math.random() * (this.worldWidth - 160);
+                        y = 80 + Math.random() * (this.worldHeight - 160);
+                        
+                        // Check distance from player start position
+                        const distanceFromPlayer = Math.sqrt((x - this.player.x) ** 2 + (y - this.player.y) ** 2);
+                        if (distanceFromPlayer > 100) {
+                            validPosition = true;
+                        }
+                        attempts++;
+                    }
+                    
+                    const fossil = document.createElement('div');
+                    fossil.className = 'fossil';
+                    fossil.textContent = '🦴';
+                    fossil.style.left = x + 'px';
+                    fossil.style.top = y + 'px';
+                    fossil.dataset.index = i;
+                    
+                    fossil.addEventListener('click', () => this.discoverFossil(i, fossil));
+                    
+                    this.gameWorld.appendChild(fossil);
+                    this.fossils.push({
+                        element: fossil,
+                        x: x,
+                        y: y,
+                        discovered: false,
+                        dinoData: this.dinoData[i]
+                    });
+                }
+            }
+            
+            setupControls() {
+                // Click to move
+                this.gameWorld.addEventListener('click', (e) => {
+                    if (e.target === this.gameWorld || e.target.classList.contains('plant') || 
+                        e.target.classList.contains('rock') || e.target.classList.contains('water')) {
+                        this.moveCharacterTo(e.offsetX, e.offsetY);
+                    }
+                });
+                
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    this.handleKeyboard(e);
+                });
+            }
+            
+            handleKeyboard(e) {
+                const speed = 5;
+                let newX = this.player.x;
+                let newY = this.player.y;
+                
+                switch (e.code) {
+                    case 'ArrowLeft':
+                    case 'KeyA':
+                        newX -= speed;
+                        break;
+                    case 'ArrowRight':
+                    case 'KeyD':
+                        newX += speed;
+                        break;
+                    case 'ArrowUp':
+                    case 'KeyW':
+                        newY -= speed;
+                        break;
+                    case 'ArrowDown':
+                    case 'KeyS':
+                        newY += speed;
+                        break;
+                    default:
+                        return;
+                }
+                
+                e.preventDefault();
+                
+                // Keep character in bounds
+                newX = Math.max(0, Math.min(newX, this.worldWidth - 50));
+                newY = Math.max(0, Math.min(newY, this.worldHeight - 50));
+                
+                this.moveCharacterTo(newX, newY);
+            }
+            
+            moveCharacterTo(x, y) {
+                // Keep character in bounds
+                x = Math.max(25, Math.min(x - 25, this.worldWidth - 75));
+                y = Math.max(25, Math.min(y - 25, this.worldHeight - 75));
+                
+                this.player.x = x;
+                this.player.y = y;
+                
+                this.dinoCharacter.style.left = x + 'px';
+                this.dinoCharacter.style.top = y + 'px';
+                
+                // Add walking animation
+                this.dinoCharacter.classList.add('walking');
+                setTimeout(() => {
+                    this.dinoCharacter.classList.remove('walking');
+                }, 500);
+                
+                // Check if character is near any fossils
+                this.checkNearbyFossils();
+            }
+            
+            checkNearbyFossils() {
+                this.fossils.forEach((fossil, index) => {
+                    if (!fossil.discovered) {
+                        const distance = Math.sqrt(
+                            (this.player.x - fossil.x) ** 2 + 
+                            (this.player.y - fossil.y) ** 2
+                        );
+                        
+                        if (distance < 80) {
+                            fossil.element.style.animation = 'fossil-excited 0.5s ease infinite';
+                        } else {
+                            fossil.element.style.animation = 'fossil-glow 3s ease-in-out infinite';
+                        }
+                    }
+                });
+            }
+            
+            discoverFossil(index, fossilElement) {
+                const fossil = this.fossils[index];
+                if (fossil.discovered) return;
+                
+                // Check if player is close enough
+                const distance = Math.sqrt(
+                    (this.player.x - fossil.x) ** 2 + 
+                    (this.player.y - fossil.y) ** 2
+                );
+                
+                if (distance > 100) {
+                    this.showNotification('Avvicinati di più al fossile! 🏃‍♂️');
+                    return;
+                }
+                
+                fossil.discovered = true;
+                fossilElement.classList.add('found');
+                
+                this.gameState.fossilsFound++;
+                this.gameState.discoveries++;
+                this.gameState.score += 100;
+                
+                // Show dino fact
+                this.showDinoFact(fossil.dinoData);
+                
+                // Add to discoveries
+                this.addDiscovery(fossil.dinoData);
+                
+                // Play discovery sound
+                this.playSound('discovery');
+                
+                // Check achievements
+                this.checkAchievements();
+                
+                // Update UI
+                this.updateUI();
+                
+                // Remove fossil element after animation
+                setTimeout(() => {
+                    fossilElement.remove();
+                }, 600);
+                
+                // Check if all fossils found
+                if (this.gameState.fossilsFound >= this.gameState.totalFossils) {
+                    setTimeout(() => this.gameComplete(), 1000);
+                }
+            }
+            
+            showDinoFact(dinoData) {
+                document.getElementById('dinoIcon').textContent = dinoData.icon;
+                document.getElementById('dinoName').textContent = dinoData.name;
+                document.getElementById('dinoFact').textContent = dinoData.fact;
+                document.getElementById('dinoDetails').textContent = dinoData.details;
+                document.getElementById('factPopup').style.display = 'block';
+            }
+            
+            addDiscovery(dinoData) {
+                const discoveryList = document.getElementById('discoveryList');
+                
+                const discoveryItem = document.createElement('div');
+                discoveryItem.className = 'discovery-item';
+                discoveryItem.innerHTML = `
+                    <strong>${dinoData.icon} ${dinoData.name}</strong><br>
+                    <small>${dinoData.period} • ${dinoData.diet}</small>
+                `;
+                
+                discoveryList.appendChild(discoveryItem);
+                this.discoveries.push(dinoData);
+                
+                // Scroll to bottom
+                discoveryList.scrollTop = discoveryList.scrollHeight;
+            }
+            
+            checkAchievements() {
+                if (this.gameState.fossilsFound === 1 && !this.achievements.includes('first_discovery')) {
+                    this.showAchievement('Prima Scoperta! 🎉', 'Hai trovato il tuo primo fossile!');
+                    this.achievements.push('first_discovery');
+                }
+                
+                if (this.gameState.fossilsFound === 5 && !this.achievements.includes('paleontologist')) {
+                    this.showAchievement('Paleontologo Junior! 🦴', 'Hai scoperto 5 dinosauri!');
+                    this.achievements.push('paleontologist');
+                }
+                
+                if (this.gameState.fossilsFound === this.gameState.totalFossils && 
+                    !this.achievements.includes('master_explorer')) {
+                    this.showAchievement('Esploratore Maestro! 👑', 'Hai scoperto tutti i dinosauri!');
+                    this.achievements.push('master_explorer');
+                }
+            }
+            
+            showAchievement(title, description) {
+                const achievement = document.getElementById('achievement');
+                achievement.querySelector('h4').textContent = title;
+                achievement.querySelector('p').textContent = description;
+                achievement.style.display = 'block';
+                
+                setTimeout(() => {
+                    achievement.style.display = 'none';
+                }, 4000);
+                
+                this.playSound('achievement');
+            }
+            
+            showNotification(message) {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 50px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(0,0,0,0.8);
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    z-index: 1000;
+                    font-family: inherit;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => notification.remove(), 3000);
+            }
+            
+            gameComplete() {
+                this.showAchievement(
+                    '🏆 Missione Completata! 🏆', 
+                    'Hai scoperto tutti i dinosauri del mondo preistorico!'
+                );
+                
+                setTimeout(() => {
+                    alert(`🎉 Congratulazioni! 🎉\n\nHai completato Dino Explorer!\n\nFossili trovati: ${this.gameState.fossilsFound}/${this.gameState.totalFossils}\nPunteggio finale: ${this.gameState.score}\nTempo: ${this.formatTime()}\n\nSei diventato un vero paleontologo!`);
+                }, 2000);
+            }
+            
+            toggleMode() {
+                this.gameState.mode = this.gameState.mode === 'explore' ? 'mission' : 'explore';
+                
+                const modeText = document.getElementById('currentMode');
+                const modeButton = document.getElementById('modeToggle');
+                
+                if (this.gameState.mode === 'explore') {
+                    modeText.textContent = 'Esplorazione Libera';
+                    modeButton.textContent = '🎯 Missioni';
+                } else {
+                    modeText.textContent = 'Modalità Missioni';
+                    modeButton.textContent = '🌍 Esplora';
+                    this.generateMission();
+                }
+            }
+            
+            generateMission() {
+                const missions = [
+                    'Trova 3 fossili in 2 minuti!',
+                    'Scopri un dinosauro carnivoro!',
+                    'Esplora vicino al vulcano!',
+                    'Trova un dinosauro del Cretaceo!'
+                ];
+                
+                const mission = missions[Math.floor(Math.random() * missions.length)];
+                this.showNotification(`🎯 Nuova Missione: ${mission}`);
+            }
+            
+            updateUI() {
+                document.getElementById('fossils').textContent = this.gameState.fossilsFound;
+                document.getElementById('discoveries').textContent = this.gameState.discoveries;
+                document.getElementById('score').textContent = this.gameState.score;
+            }
+            
+            startTimer() {
+                setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - this.gameState.startTime) / 1000);
+                    document.getElementById('time').textContent = this.formatTime(elapsed);
+                }, 1000);
+            }
+            
+            formatTime(seconds = null) {
+                if (seconds === null) {
+                    seconds = Math.floor((Date.now() - this.gameState.startTime) / 1000);
+                }
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }
+            
+            playSound(type) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    switch (type) {
+                        case 'discovery':
+                            this.playTone(audioContext, 800, 0.3);
+                            setTimeout(() => this.playTone(audioContext, 1000, 0.3), 150);
+                            setTimeout(() => this.playTone(audioContext, 1200, 0.4), 300);
+                            break;
+                        case 'achievement':
+                            const notes = [523, 659, 784, 1047, 1319];
+                            notes.forEach((note, i) => {
+                                setTimeout(() => this.playTone(audioContext, note, 0.4), i * 150);
+                            });
+                            break;
+                    }
+                } catch (e) {
+                    // Ignore audio errors
+                }
+            }
+            
+            playTone(audioContext, frequency, duration) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            }
+        }
+        
+        // Initialize game
+        let game = new DinoExplorerGame();
+        
+        function closeFact() {
+            document.getElementById('factPopup').style.display = 'none';
+        }
+        
+        function toggleMode() {
+            game.toggleMode();
+        }
+        
+        // Resize handler
+        window.addEventListener('resize', () => {
+            game.setupWorld();
+        });
+    </script>
+</body>
+</html>

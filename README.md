@@ -15,27 +15,41 @@ Una piattaforma di giochi educativi per bambini di 5-6 anni, progettata per esse
 
 ```
 KidsPlay_Web_Arcade/
-├── index.html                    # Homepage principale
-├── games.json                    # Catalogo giochi
-├── manifest.json                 # PWA manifest
-├── sw.js                        # Service worker
-├── config/                      # Configurazioni profili
-│   ├── figlio1.json
-│   ├── figlio2.json
-│   └── default.json
-├── games/                       # Directory giochi
-│   ├── educational/             # Giochi educativi
-│   │   └── snake/              # Snake educativo
-│   └── adventure/               # Giochi avventura (futuro)
-├── common/                      # Risorse condivise
-│   ├── core/                   # Engine di gioco
-│   │   ├── game-engine.js
-│   │   ├── input-manager.js
-│   │   └── audio-manager.js
-│   └── styles/                 # CSS
-│       ├── base.css
-│       └── mobile.css
-└── assets/                     # Media (immagini, suoni)
+├── index.html                   # Redirect alla piattaforma
+├── src/
+│   └── frontend/
+│       ├── index.html           # Homepage principale
+│       ├── manifest.json        # PWA manifest
+│       ├── sw.js               # Service worker
+│       ├── config/             # Configurazioni profili
+│       │   ├── figlio1.json
+│       │   ├── figlio2.json
+│       │   └── default.json
+│       ├── data/
+│       │   └── games.json      # Catalogo giochi (8 giochi)
+│       ├── games/              # Directory giochi
+│       │   ├── educational/    # 4 giochi educativi
+│       │   │   ├── snake/
+│       │   │   ├── memory-letters/
+│       │   │   ├── letter-hunt/
+│       │   │   └── math-easy/
+│       │   └── adventure/      # 4 giochi avventura
+│       │       ├── blockworld/
+│       │       ├── speedy-adventures/
+│       │       ├── dino-explorer/
+│       │       └── digital-subbuteo/
+│       ├── shared/
+│       │   └── common/
+│       │       ├── core/       # Engine di gioco
+│       │       │   ├── game-engine.js
+│       │       │   ├── input-manager.js
+│       │       │   └── audio-manager.js
+│       │       └── styles/     # CSS
+│       │           ├── base.css
+│       │           └── mobile.css
+│       └── js/
+│           └── user-manager.js  # Gestione utenti
+└── docs/                       # Documentazione
 ```
 
 ## 🚀 Avvio Rapido
@@ -45,14 +59,12 @@ KidsPlay_Web_Arcade/
 Per testare immediatamente la piattaforma:
 
 ```bash
-# Con Python 3
-python server.py
-
-# Oppure con Python built-in
+# Con Python 3 (dalla root del progetto)
+cd src/frontend
 python -m http.server 8080
 
-# Con Node.js (se disponibile)
-npx serve . -l 8080
+# Oppure usa il server personalizzato
+python server.py
 ```
 
 Poi apri http://localhost:8080 nel browser.
@@ -91,13 +103,19 @@ Per testare su dispositivi mobili:
 
 ## 👶 Giochi Disponibili
 
-### Educativi (MVP)
+### Educativi ✅
 - **🐍 Snake Educativo**: Coordinazione e direzioni
-- **🔤 Memory Lettere**: Memoria e alfabeto (coming soon)
-- **🔢 Matematica Facile**: Somme fino a 10 (coming soon)
+- **🔤 Memory Lettere**: Memoria e alfabeto
+- **🔍 Caccia alle Lettere**: Trova le lettere nascoste
+- **🔢 Matematica Facile**: Somme e sottrazioni fino a 10
 
-### Avventura (Roadmap)
+### Avventura ✅
 - **🧱 BlockWorld**: Creatività stile Minecraft
+- **💨 Speedy Adventures**: Platform runner veloce
+- **🦕 Dino Explorer**: Esplora il mondo dei dinosauri (Pokemon-style)
+- **⚽ Digital Subbuteo**: Calcio da tavolo digitale
+
+**Totale: 8 giochi completamente funzionanti!**
 - **💨 Speedy Adventures**: Platform veloce
 - **🦕 Dino Explorer**: Esplorazione educativa
 

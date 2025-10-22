@@ -18,16 +18,19 @@ class _MyGamepadAppState extends State<MyGamepadApp> {
   @override
   void initState() {
     super.initState();
-    Gamepads.instance.gamepadEvents.listen((event) {
-      if (event is GamepadAxisEvent) {
-        if (event.axis == GamepadAxis.leftStickX) {
+    // Usa il nuovo stream dalla versione 0.1.5+
+    Gamepads.events.listen((event) {
+      if (event.key.startsWith('axis_')) {
+        // Axis events: gestisci i movimenti degli stick
+        double value = event.value;
+        if (event.key == 'axis_left_x') {
           setState(() {
-            position = Offset(position.dx + event.value * 5, position.dy);
+            position = Offset(position.dx + value * 5, position.dy);
           });
         }
-        if (event.axis == GamepadAxis.leftStickY) {
+        if (event.key == 'axis_left_y') {
           setState(() {
-            position = Offset(position.dx, position.dy + event.value * 5);
+            position = Offset(position.dx, position.dy + value * 5);
           });
         }
       }
