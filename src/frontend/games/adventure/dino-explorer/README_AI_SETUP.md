@@ -45,9 +45,10 @@ geminiApiKey: 'YOUR_GEMINI_API_KEY_HERE',
 
 Sostituisci `'YOUR_GEMINI_API_KEY_HERE'` con la tua chiave API effettiva.
 
-**Esempio:**
+**Esempio formato chiave:**
 ```javascript
-geminiApiKey: 'AIzaSyB1234567890abcdefghijklmnopqrstuv',
+// La tua chiave avrà un formato simile a questo (ma con caratteri diversi):
+geminiApiKey: 'AIzaSy_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
 ```
 
 ### Passo 3: Attiva la Generazione AI
