@@ -1083,31 +1083,20 @@
                         return;
                     }
                     
-                    // Priority 2: Try AI generation (only for NEW discoveries, not re-discoveries)
-                    if (GameConfig.enableAIImages && isNewDiscovery) {
-                        loadingEl.textContent = '🎨 Generazione immagine AI';
-                        const imageData = await geminiImageService.generateDinosaurImage(dino);
-                        
-                        if (imageData) {
-                            imgEl.src = 'data:image/png;base64,' + imageData;
-                            imgEl.style.display = 'block';
-                            loadingEl.style.display = 'none';
-                            console.log(`✅ Generated AI image for ${dino.name}`);
-                            return;
-                        }
-                    } else if (GameConfig.enableAIImages && !isNewDiscovery) {
-                        // For re-discoveries, check cache only (no new generation)
-                        const cached = geminiImageService.getCachedImage(dino.id);
-                        if (cached) {
-                            imgEl.src = 'data:image/png;base64,' + cached;
-                            imgEl.style.display = 'block';
-                            loadingEl.style.display = 'none';
-                            console.log(`📦 Loaded cached AI image for ${dino.name}`);
-                            return;
-                        }
-                    }
+                // Priority 2: Try AI generation (with cache check inside generateDinosaurImage)
+                if (GameConfig.enableAIImages) {
+                    loadingEl.textContent = '🎨 Generazione immagine AI';
+                    const imageData = await geminiImageService.generateDinosaurImage(dino);
                     
-                    // Priority 3: No image available, hide container
+                    if (imageData) {
+                        imgEl.src = 'data:image/png;base64,' + imageData;
+                        imgEl.style.display = 'block';
+                        loadingEl.style.display = 'none';
+                        const cacheStatus = geminiImageService.getCachedImage(dino.id) ? '📦 cached' : '✅ generated';
+                        console.log(`${cacheStatus} AI image for ${dino.name}`);
+                        return;
+                    }
+                }                    // Priority 3: No image available, hide container
                     loadingEl.parentElement.style.display = 'none';
                     
                 } catch (error) {
