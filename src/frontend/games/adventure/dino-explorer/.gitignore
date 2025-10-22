@@ -1,0 +1,9 @@
+# Ignore file with real API keys (local override)
+game-config.local.js
+
+# Ignore environment files
+.env
+.env.local
+
+# Ignore generated images (optional - rimuovi se vuoi committare le immagini)
+# assets/dinosaurs/*.png

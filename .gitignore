@@ -108,4 +108,5 @@ assets/game/fonts/
 *.7z
 *.bak
 *.old
-src/frontend/games/adventure/dino-explorer/game-config.js
+# Ignore local API config files (with real keys)
+src/frontend/games/adventure/dino-explorer/game-config.local.js

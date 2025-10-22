@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dino Explorer - Labirinto Preistorico</title>
     <script src="game-config.js"></script>
+    <!-- Load local config if exists (overrides game-config.js, not committed to git) -->
+    <script src="game-config.local.js" onerror="console.log('No local config found, using default')"></script>
     <script src="gemini-image-service.js"></script>
     <style>
         * {
