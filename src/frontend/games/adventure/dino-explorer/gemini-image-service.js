@@ -57,19 +57,81 @@ class GeminiImageService {
      * Build detailed prompt for Gemini image generation
      */
     buildPrompt(dinosaur) {
-        return `Create a high-quality, detailed illustration of a ${dinosaur.name} (${dinosaur.scientificName}). 
-Style: Vibrant, educational, child-friendly cartoon illustration suitable for a kids' learning game.
-Details: 
+        // Build specific features description based on dinosaur type
+        const specificFeatures = this.getSpecificFeatures(dinosaur);
+        
+        return `Create a highly accurate, detailed illustration of a ${dinosaur.scientificName} (commonly known as ${dinosaur.name}).
+
+CRITICAL: This MUST be a ${dinosaur.scientificName} showing its most distinctive and recognizable features.
+
+Distinctive Features to Show:
+${specificFeatures}
+
+Scientific Details:
 - Period: ${dinosaur.period}
 - Type: ${dinosaur.type}
 - Size: ${dinosaur.size}
 - Habitat: ${dinosaur.habitat}
-- Description: ${dinosaur.description}
 
-The dinosaur should look friendly and appealing to children aged 6-12. 
-Use bright, engaging colors. Clear details showing distinctive features.
-Background: Simple, appropriate for ${dinosaur.habitat} habitat.
-Style reference: Educational museum illustration meets modern children's book art.`;
+Style Requirements:
+- Vibrant, educational illustration suitable for children aged 6-12
+- Child-friendly and appealing, but scientifically accurate
+- Clear view showing the dinosaur's most recognizable features
+- Bright, engaging colors appropriate for the species
+- Simple background with ${dinosaur.habitat} environment elements
+- Educational museum quality meets modern children's book art
+
+The illustration should be immediately recognizable as a ${dinosaur.scientificName} based on its unique physical characteristics.`;
+    }
+    
+    /**
+     * Get specific physical features for each dinosaur type
+     */
+    getSpecificFeatures(dinosaur) {
+        const features = {
+            'tyrannosaurus': `- Massive head with powerful jaws and large sharp teeth
+- Short arms with two fingers
+- Large muscular legs
+- Long thick tail for balance
+- Bipedal stance (stands on two legs)`,
+            
+            'triceratops': `- THREE prominent horns (two long brow horns above eyes, one shorter nose horn)
+- Large bony neck frill (shield-like structure behind head)
+- Parrot-like beak
+- Four sturdy legs (quadrupedal stance)
+- Stocky, robust body similar to a rhinoceros`,
+            
+            'velociraptor': `- Small to medium size (turkey-sized)
+- Large curved claw on each foot (sickle-shaped killing claw)
+- Long stiff tail for balance
+- Feathered body (important!)
+- Bipedal stance with long legs
+- Sharp teeth in narrow snout`,
+            
+            'stegosaurus': `- Large triangular bony plates along the back in two rows
+- Four large spikes on the tail (thagomizer)
+- Small head relative to body
+- Four sturdy legs with front legs shorter than back legs
+- Arched back profile`,
+            
+            'brontosaurus': `- Extremely long neck (one of the longest)
+- Very long whip-like tail
+- Small head at end of long neck
+- Massive pillar-like legs (elephant-like)
+- Large barrel-shaped body
+- Quadrupedal stance`,
+            
+            'allosaurus': `- Large head with sharp teeth and powerful jaws
+- Three-fingered hands with sharp claws
+- Bipedal stance with strong legs
+- Long tail for balance
+- Ridge above each eye
+- Smaller than T-Rex but similar body plan`
+        };
+        
+        return features[dinosaur.id] || `- Distinctive features of ${dinosaur.scientificName}
+- Accurate anatomical details
+- Recognizable body shape and proportions`;
     }
 
     /**
