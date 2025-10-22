@@ -7,6 +7,15 @@
 
 // Uncomment and add your real API key here:
 // GameConfig.geminiApiKey = 'YOUR_REAL_API_KEY_HERE';
+//
+// // Re-check and enable AI images
+// if (GameConfig.isApiConfigured()) {
+//     GameConfig.enableAIImages = true;
+//     console.log('✅ Gemini API configured via local config - AI image generation enabled');
+// }
 
 // Example:
 // GameConfig.geminiApiKey = 'AIzaSy...your_key_here';
+// if (GameConfig.isApiConfigured()) {
+//     GameConfig.enableAIImages = true;
+// }

@@ -12,22 +12,18 @@ const GameConfig = {
     geminiApiKey: 'YOUR_GEMINI_API_KEY_HERE', // ⚠️ NEVER commit real API keys! Add to .gitignore
     
     // Imagen 3 API endpoint (correct model for image generation)
-    geminiApiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict',
+    geminiApiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:generate',
     
     // Game Settings
-    enableAIImages: false, // TEMPORARILY DISABLED - API model issue
+    enableAIImages: false, // Auto-enabled if API key is configured
     enablePushableBlocks: true, // Enable Sokoban-style blocks
     enableMovingDinosaurs: true, // Dinosaurs move each turn
     
     // Check if API is configured
     isApiConfigured() {
-        // Temporarily return false until we fix the API model
-        return false;
-        /* Original check:
         return this.geminiApiKey && 
                this.geminiApiKey !== 'YOUR_GEMINI_API_KEY_HERE' &&
                this.geminiApiKey.length > 10;
-        */
     }
 };
 
