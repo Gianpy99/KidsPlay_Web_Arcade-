@@ -8,6 +8,16 @@ Write-Host "================================================================" -F
 $currentDir = Get-Location
 Write-Host "📁 Current directory: $currentDir" -ForegroundColor Yellow
 
+# KidsPlay Server Setup and Start Script with Performance Monitoring
+# This script installs dependencies and starts the server with enhanced monitoring
+
+Write-Host "🎮 KidsPlay Server - Setup & Start with Performance Monitoring" -ForegroundColor Cyan
+Write-Host "================================================================" -ForegroundColor Cyan
+
+# Check if we're in the right directory
+$currentDir = Get-Location
+Write-Host "📁 Current directory: $currentDir" -ForegroundColor Yellow
+
 # Navigate to backend directory
 $backendDir = Join-Path $PSScriptRoot "src\backend"
 if (Test-Path $backendDir) {
@@ -20,7 +30,7 @@ if (Test-Path $backendDir) {
 
 # Check if Python is installed
 try {
-    $pythonVersion = python --version 2>&1
+    $pythonVersion = (& python --version) 2>&1
     Write-Host "🐍 Python found: $pythonVersion" -ForegroundColor Green
 } catch {
     Write-Host "❌ Python not found. Please install Python 3.7 or higher." -ForegroundColor Red
@@ -32,16 +42,16 @@ try {
 Write-Host "📦 Installing Python dependencies..." -ForegroundColor Yellow
 if (Test-Path "requirements.txt") {
     try {
-        pip install -r requirements.txt
+        & pip install -r requirements.txt
         Write-Host "✅ Dependencies installed successfully" -ForegroundColor Green
     } catch {
         Write-Host "⚠️  Error installing dependencies: $($_.Exception.Message)" -ForegroundColor Red
         Write-Host "   Trying to install psutil manually..." -ForegroundColor Yellow
-        pip install psutil
+        & pip install psutil
     }
 } else {
     Write-Host "⚠️  requirements.txt not found, installing psutil manually..." -ForegroundColor Yellow
-    pip install psutil
+    & pip install psutil
 }
 
 # Create logs directory if it doesn't exist
@@ -67,7 +77,7 @@ Write-Host ""
 
 # Start the server
 try {
-    python server.py
+    & python server.py
 } catch {
     Write-Host "❌ Error starting server: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
