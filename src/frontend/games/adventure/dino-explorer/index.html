@@ -1075,19 +1075,55 @@
                                        this.discoveredDinos.size === 1; // Just added
                 
                 try {
-                    // Priority 1: Try local image file
-                    const localImagePath = `assets/dinosaurs/${dino.id}.png`;
-                    const localImageExists = await this.checkImageExists(localImagePath);
-                    
+                    // Priority 1: Try local image file in organized subfolders
+                    const rawType = dino.type ? dino.type.toLowerCase().trim() : '';
+                    // Map common type names to folder names (pluralized)
+                    const typeMap = {
+                        'herbivore': 'herbivores',
+                        'herbivores': 'herbivores',
+                        'carnivore': 'carnivores',
+                        'carnivores': 'carnivores',
+                        'omnivore': 'omnivores',
+                        'omnivores': 'omnivores',
+                        'flying': 'flying'
+                    };
+
+                    const triedPaths = [];
+                    let localImagePath = '';
+                    let localImageExists = false;
+
+                    // 1) Try pluralized folder from map
+                    const mapped = typeMap[rawType];
+                    if (mapped) {
+                        localImagePath = `assets/dinosaurs/${mapped}/${dino.id}.png`;
+                        triedPaths.push(localImagePath);
+                        localImageExists = await this.checkImageExists(localImagePath);
+                    }
+
+                    // 2) Try using raw type as folder (in case folder naming differs)
+                    if (!localImageExists && rawType) {
+                        localImagePath = `assets/dinosaurs/${rawType}/${dino.id}.png`;
+                        triedPaths.push(localImagePath);
+                        localImageExists = await this.checkImageExists(localImagePath);
+                    }
+
+                    // 3) Fallback: try root dinosaurs folder
+                    if (!localImageExists) {
+                        localImagePath = `assets/dinosaurs/${dino.id}.png`;
+                        triedPaths.push(localImagePath);
+                        localImageExists = await this.checkImageExists(localImagePath);
+                    }
+
                     if (localImageExists) {
                         imgEl.src = localImagePath;
                         imgEl.onload = () => {
                             imgEl.style.display = 'block';
                             loadingEl.style.display = 'none';
-                            console.log(`✅ Loaded local image for ${dino.name}`);
+                            console.log(`✅ Loaded local image for ${dino.name} from ${localImagePath}`);
                         };
                         return;
                     }
+                    console.log('🔎 Tried local image paths:', triedPaths);
                     
                 // Priority 2: Try AI generation (with cache check inside generateDinosaurImage)
                 if (GameConfig.enableAIImages) {
