@@ -11,8 +11,15 @@ import logging
 import json
 import psutil
 import urllib.parse
+import sys
 from datetime import datetime
 from collections import deque, defaultdict
+
+# Fix Unicode encoding issues on Windows
+if sys.platform == 'win32':
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
 PORT = 8080
 
@@ -202,6 +209,10 @@ class KidsPlayHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     
     def log_message(self, format, *args):
         """Override to reduce console spam and use our logger"""
+        # Ignore flutter_service_worker.js 404s (browser auto-requests this for PWAs)
+        if 'flutter_service_worker.js' in str(args[0]):
+            return
+        
         # Only log errors to console, everything else goes to file
         if "40" in str(args[1]) or "50" in str(args[1]):  # 4xx or 5xx status codes
             perf_monitor.perf_logger.warning(format % args)
@@ -291,12 +302,12 @@ def start_server():
         
         threading.Thread(target=report_stats, daemon=True).start()
         
-        # Open browser after a short delay
-        def open_browser():
-            time.sleep(1)
-            webbrowser.open(f'http://localhost:{PORT}')
-        
-        threading.Thread(target=open_browser).start()
+        # Note: Browser opening is handled by the launcher script
+        # If running server directly, uncomment the lines below:
+        # def open_browser():
+        #     time.sleep(1)
+        #     webbrowser.open(f'http://localhost:{PORT}')
+        # threading.Thread(target=open_browser).start()
         
         try:
             perf_monitor.perf_logger.info("Server started successfully")
