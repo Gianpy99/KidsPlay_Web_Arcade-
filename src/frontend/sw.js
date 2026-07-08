@@ -1,71 +1,28 @@
-const CACHE_NAME = 'kidsplay-v2.2-restructured'; // Aggiornato per la nuova struttura
-const urlsToCache = [
-    '/',
-    '/index.html',
-    '/shared/common/core/game-engine.js',
-    '/shared/common/core/input-manager.js',
-    '/shared/common/core/audio-manager.js',
-    '/shared/common/styles/base.css',
-    '/shared/common/styles/mobile.css',
-    '/data/games.json',
-    '/manifest.json',
-    '/games/educational/snake/index.html'
-];
+// KILL SWITCH Service Worker
+// Questo SW sostituisce le vecchie versioni con caching (es. kidsplay-v2.2).
+// Non fa caching: elimina tutte le cache esistenti, si de-registra da solo
+// e ricarica i client, cosi' i dispositivi con un vecchio SW attivo tornano
+// a scaricare i file aggiornati direttamente dalla rete.
 
 self.addEventListener('install', (event) => {
-    console.log('SW: Installing...');
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => {
-                console.log('SW: Cache opened');
-                return cache.addAll(urlsToCache);
-            })
-            .catch((error) => {
-                console.error('SW: Install failed:', error);
-            })
-    );
-    self.skipWaiting(); // Forza l'attivazione immediata
+    self.skipWaiting(); // Attiva subito, senza attendere
 });
 
 self.addEventListener('activate', (event) => {
-    console.log('SW: Activating...');
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('SW: Deleting old cache:', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        }).then(() => {
-            console.log('SW: Activated');
-            return self.clients.claim(); // Prende controllo immediato
-        })
+        (async () => {
+            // Svuota tutte le cache lasciate dalle vecchie versioni
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map((name) => caches.delete(name)));
+
+            // De-registra questo Service Worker
+            await self.registration.unregister();
+
+            // Prende il controllo e ricarica tutte le schede aperte
+            const clients = await self.clients.matchAll({ type: 'window' });
+            clients.forEach((client) => client.navigate(client.url));
+        })()
     );
 });
 
-self.addEventListener('fetch', (event) => {
-    // Ignora richieste non-HTTP per evitare errori
-    if (!event.request.url.startsWith('http')) {
-        return;
-    }
-    
-    event.respondWith(
-        caches.match(event.request)
-            .then((response) => {
-                if (response) {
-                    return response;
-                }
-                return fetch(event.request).catch((error) => {
-                    console.log('SW: Fetch failed:', error);
-                    return new Response('Offline', { status: 503 });
-                });
-            })
-            .catch((error) => {
-                console.error('SW: Cache match failed:', error);
-                return fetch(event.request);
-            })
-    );
-});
+// Nessuna intercettazione delle richieste: tutto passa direttamente in rete.

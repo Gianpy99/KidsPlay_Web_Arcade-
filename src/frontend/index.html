@@ -341,39 +341,22 @@
             }
         });
         
-        // Service Worker temporaneamente disabilitato per debug
-        // Rimuovi questo commento per riattivare il PWA
-        /*
+        // Service Worker KILL SWITCH: registra sw.js (che si auto-elimina e
+        // svuota le cache) per ripulire i dispositivi che avevano un vecchio
+        // Service Worker con caching attivo (es. kidsplay-v2.2).
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('/sw.js?v=killswitch')
                     .then((registration) => {
-                        console.log('✅ SW registered successfully:', registration.scope);
-                        
-                        // Handle updates
-                        registration.addEventListener('updatefound', () => {
-                            console.log('SW: Update found');
-                        });
+                        console.log('🧹 SW kill-switch registrato:', registration.scope);
                     })
                     .catch((registrationError) => {
                         console.log('❌ SW registration failed:', registrationError);
                     });
-                    
-                // Listen for SW messages
-                navigator.serviceWorker.addEventListener('message', (event) => {
-                    console.log('SW message:', event.data);
-                });
-                
-                // Handle SW errors
-                navigator.serviceWorker.addEventListener('error', (error) => {
-                    console.log('SW error:', error);
-                });
             });
         } else {
             console.log('Service Worker not supported');
         }
-        */
-        console.log('🔧 Service Worker temporaneamente disabilitato per debug');
         
         // Global error handler per catturare errori di estensioni
         window.addEventListener('error', (error) => {

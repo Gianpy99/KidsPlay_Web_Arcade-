@@ -1,0 +1,13 @@
+.git
+backup
+logs
+**/__pycache__
+*.pyc
+experiments
+prototypes
+research_spikes
+sandbox
+models
+tests
+docs
+.pytest_cache
