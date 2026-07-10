@@ -28,14 +28,14 @@
         },
         {
             "id": "math-easy",
-            "title": "Matematica Facile",
-            "description": "Somme e sottrazioni fino a 10",
+            "title": "Avventura Matematica",
+            "description": "Due modalità: Piccolino (conta gli animali) e Campione (somme, tabelline e sfide)!",
             "category": "educational",
-            "icon": "🔢",
-            "min_age": 5,
+            "icon": "🧮",
+            "min_age": 2,
             "max_age": 7,
-            "skills": ["matematica", "logica"],
-            "difficulty_levels": ["very_easy", "easy", "normal"],
+            "skills": ["conteggio", "matematica", "tabelline", "logica"],
+            "difficulty_levels": ["toddler", "easy", "normal", "hard"],
             "estimated_time": "5-15 min"
         },
         {
