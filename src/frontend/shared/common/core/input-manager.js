@@ -43,28 +43,39 @@ class UniversalInputManager {
     }
     
     setupTouchListeners() {
+        // Non bloccare il tap sugli elementi interattivi: se chiamiamo
+        // e.preventDefault() su document per ogni touch, il browser mobile
+        // annulla il "click" sintetico e i pulsanti/link non rispondono.
+        const isInteractive = (target) => {
+            return !!(target && typeof target.closest === 'function' &&
+                target.closest('a, button, input, select, textarea, label, [role="button"], [onclick], .play-button, .game-card'));
+        };
+
         document.addEventListener('touchstart', (e) => {
+            if (isInteractive(e.target)) return;
             e.preventDefault();
             this.touchState.active = true;
             this.touchState.startX = e.touches[0].clientX;
             this.touchState.startY = e.touches[0].clientY;
-        });
-        
+        }, { passive: false });
+
         document.addEventListener('touchend', (e) => {
+            if (isInteractive(e.target)) return;
             e.preventDefault();
             if (this.touchState.active) {
                 this.handleTouchGesture();
                 this.touchState.active = false;
             }
-        });
-        
+        }, { passive: false });
+
         document.addEventListener('touchmove', (e) => {
+            if (isInteractive(e.target)) return;
             e.preventDefault();
             if (this.touchState.active) {
                 this.touchState.currentX = e.touches[0].clientX;
                 this.touchState.currentY = e.touches[0].clientY;
             }
-        });
+        }, { passive: false });
     }
     
     startGamepadPolling() {
